@@ -1,0 +1,8 @@
+{
+  "name": "Cecip 2.0",
+  "description": "ERP + Página web ",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
