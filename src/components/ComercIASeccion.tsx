@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowRight, Bot, Camera, Rocket, ShoppingBag, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowRight, Camera, Pause, Play, Rocket, Sparkles, Users, Zap } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
+import { clamp, lerp, movimientoReducido, suave, tramo } from "../lib/animacion";
 
 /**
- * ComercIA Inteligente: historia que avanza con el scroll (4 capítulos).
+ * ComercIA Inteligente: una animación tipo video (4 capítulos) que se reproduce sola al verla.
  * Un comercio del CeCIP se transforma: vidriera → tienda online → IA que atiende → ventas que crecen.
- * La sección queda fija ("sticky") mientras se scrollea y todo se mueve según el avance.
- * Con "reducir movimiento" del sistema se muestra una versión estática.
+ * Se puede pausar y saltar a cada capítulo. Con "reducir movimiento" del sistema se muestra una versión estática.
  */
 
 const URL_ADHESION = "https://iec-ia.com.ar/formulariofactoria.html";
@@ -48,12 +48,6 @@ const CHATS = [
   { de: "ia", texto: "Hoy mismo, en Paraná 🚀" },
 ];
 
-const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-/** Avance 0→1 de un tramo [desde, hasta] del scroll total */
-const tramo = (p: number, desde: number, hasta: number) => clamp((p - desde) / (hasta - desde));
-const suave = (t: number) => t * t * (3 - 2 * t);
-
 // Colores de fondo por capítulo (de la web clara al azul marino del CeCIP)
 const FONDOS = [[240, 248, 253], [226, 244, 252], [12, 35, 86], [7, 23, 56]];
 function fondo(p: number) {
@@ -64,36 +58,62 @@ function fondo(p: number) {
   return `rgb(${c.join(",")})`;
 }
 
-function useAvance(ref: React.RefObject<HTMLElement | null>) {
-  const [p, setP] = useState(0);
+// Guion del "video": en cada parada se queda quieto un rato y después se mueve a la siguiente
+const PARADAS = [0.02, 0.36, 0.63, 0.97];
+const QUIETO = 3400, MOVIMIENTO = 1700, QUIETO_FINAL = 5200, REBOBINADO = 1300;
+const TRAMOS = PARADAS.map((desde, k) => ({
+  desde,
+  hasta: k < PARADAS.length - 1 ? PARADAS[k + 1] : PARADAS[0],
+  quieto: k < PARADAS.length - 1 ? QUIETO : QUIETO_FINAL,
+  mov: k < PARADAS.length - 1 ? MOVIMIENTO : REBOBINADO,
+}));
+const INICIOS = TRAMOS.reduce<number[]>((acc, _, k) => [...acc, k ? acc[k - 1] + TRAMOS[k - 1].quieto + TRAMOS[k - 1].mov : 0], []);
+const TOTAL = INICIOS[INICIOS.length - 1] + TRAMOS[TRAMOS.length - 1].quieto + TRAMOS[TRAMOS.length - 1].mov;
+
+function avanceEn(t: number) {
+  for (let k = TRAMOS.length - 1; k >= 0; k--) {
+    if (t < INICIOS[k]) continue;
+    const { desde, hasta, quieto, mov } = TRAMOS[k];
+    const r = t - INICIOS[k];
+    return r < quieto ? desde : lerp(desde, hasta, suave(clamp((r - quieto) / mov)));
+  }
+  return PARADAS[0];
+}
+
+/** Reloj del video: corre solo mientras la sección se ve en pantalla y no está en pausa */
+function useVideo(ref: React.RefObject<HTMLElement | null>) {
+  const [t, setT] = useState(0);
+  const [pausa, setPausa] = useState(false);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    let raf = 0;
-    const medir = () => {
-      raf = 0;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const recorrido = r.height - window.innerHeight;
-      setP(recorrido > 0 ? clamp(-r.top / recorrido) : 0);
-    };
-    const pedir = () => { if (!raf) raf = requestAnimationFrame(medir); };
-    medir();
-    window.addEventListener("scroll", pedir, { passive: true });
-    window.addEventListener("resize", pedir);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("scroll", pedir); window.removeEventListener("resize", pedir); };
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.35 });
+    io.observe(el);
+    return () => io.disconnect();
   }, [ref]);
-  return p;
+  useEffect(() => {
+    if (!visible || pausa) return;
+    let raf = 0, antes = performance.now();
+    const paso = (ahora: number) => {
+      setT((v) => (v + Math.min(ahora - antes, 250)) % TOTAL);
+      antes = ahora;
+      raf = requestAnimationFrame(paso);
+    };
+    raf = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(raf);
+  }, [visible, pausa]);
+  return { p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, irA: (k: number) => { setT(INICIOS[k]); setPausa(false); } };
 }
 
 export default function ComercIASeccion() {
-  const reducido = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if (reducido) return <ComercIAEstatica />;
-  return <ComercIAScroll />;
+  if (movimientoReducido()) return <ComercIAEstatica />;
+  return <ComercIAVideo />;
 }
 
-function ComercIAScroll() {
+function ComercIAVideo() {
   const ref = useRef<HTMLElement>(null);
-  const p = useAvance(ref);
+  const { p, tiempo, pausa, setPausa, irA } = useVideo(ref);
   const n = CAPITULOS.length;
   const activo = Math.min(n - 1, Math.floor(p * n + 0.0001));
   const oscuro = p > 0.42;
@@ -107,9 +127,9 @@ function ComercIAScroll() {
   const carrito = Math.round(tramo(p, 0.26, 0.5) * 12);
 
   return (
-    <section id="comercia-section" ref={ref} className="relative" style={{ height: "440vh" }} aria-label="ComercIA Inteligente">
+    <section id="comercia-section" ref={ref} className="relative" aria-label="ComercIA Inteligente">
       <style>{CSS}</style>
-      <div className="sticky top-0 h-[100svh] overflow-hidden transition-colors duration-300" style={{ background: fondo(p) }}>
+      <div className="relative h-[100svh] min-h-[640px] max-h-[960px] overflow-hidden" style={{ background: fondo(p) }}>
         {/* halo de luz que sigue al objeto */}
         <div className="cia-halo" style={{ opacity: lerp(0.5, 0.9, p), background: oscuro ? "radial-gradient(circle, rgba(0,163,224,.35), transparent 60%)" : "radial-gradient(circle, rgba(0,163,224,.22), transparent 60%)" }} />
 
@@ -242,18 +262,31 @@ function ComercIAScroll() {
           </div>
         </div>
 
-        {/* Indicador lateral de capítulos */}
+        {/* Capítulos (se pueden tocar para saltar) */}
         <div className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-3 sm:flex lg:right-6">
-          {CAPITULOS.map((_, i) => (
-            <div key={i} className={`flex items-center gap-2 text-[11px] font-bold transition-all ${i === activo ? (oscuro ? "text-white" : "text-[#0c2356]") : oscuro ? "text-white/30" : "text-slate-300"}`}>
+          {CAPITULOS.map((c, i) => (
+            <button key={i} type="button" onClick={() => irA(i)} title={c.eyebrow}
+              className={`flex cursor-pointer items-center gap-2 text-[11px] font-bold transition-all ${i === activo ? (oscuro ? "text-white" : "text-[#0c2356]") : oscuro ? "text-white/30 hover:text-white/70" : "text-slate-300 hover:text-slate-500"}`}>
               <span>0{i + 1}</span>
               <span className={`h-1.5 rounded-full transition-all ${i === activo ? "w-5 bg-[#00a3e0]" : "w-1.5 bg-current"}`} />
-            </div>
+            </button>
           ))}
         </div>
+        {/* Controles del video */}
+        <div className="absolute bottom-4 left-5 z-20 flex items-center gap-3 sm:left-8 lg:left-12">
+          <button type="button" onClick={() => setPausa(!pausa)} aria-label={pausa ? "Reproducir" : "Pausar"}
+            className={`grid h-9 w-9 cursor-pointer place-items-center rounded-full border transition-colors ${oscuro ? "border-white/25 text-white hover:bg-white/10" : "border-slate-300 text-[#0c2356] hover:bg-white"}`}>
+            {pausa ? <Play size={15} /> : <Pause size={15} />}
+          </button>
+          <div className="flex gap-1.5 sm:hidden">
+            {CAPITULOS.map((_, i) => (
+              <button key={i} type="button" onClick={() => irA(i)} aria-label={`Capítulo ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${i === activo ? "w-5 bg-[#00a3e0]" : oscuro ? "w-1.5 bg-white/40" : "w-1.5 bg-slate-300"}`} />
+            ))}
+          </div>
+        </div>
         {/* Barra de avance */}
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-black/5"><div className="h-full bg-[#00a3e0]" style={{ width: `${p * 100}%` }} /></div>
-        {p < 0.04 && <div className={`cia-baja absolute bottom-6 left-1/2 -translate-x-1/2 text-xs font-semibold ${oscuro ? "text-white/60" : "text-slate-400"}`}>Deslizá para descubrir ↓</div>}
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-black/5"><div className="h-full bg-[#00a3e0]" style={{ width: `${tiempo * 100}%` }} /></div>
       </div>
     </section>
   );
@@ -338,6 +371,4 @@ const CSS = `
 .cia-cta-sec { display: inline-flex; align-items: center; border-radius: .75rem; padding: .8rem 1.2rem; font-size: .875rem; font-weight: 600;
   color: #e0f2fe; border: 1px solid rgba(255,255,255,.25); transition: background .2s; }
 .cia-cta-sec:hover { background: rgba(255,255,255,.08); }
-.cia-baja { animation: cia-baja 1.6s ease-in-out infinite; }
-@keyframes cia-baja { 0%, 100% { transform: translate(-50%, 0); opacity: .6; } 50% { transform: translate(-50%, 6px); opacity: 1; } }
 `;

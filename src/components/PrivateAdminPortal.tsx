@@ -50,7 +50,7 @@ export default function PrivateAdminPortal({
     badge: "Actualidad",
     description: "",
     additionalInfo: "",
-    imageUrl: "/src/assets/images/cecip_representatives_1782854765721.jpg"
+    imageUrl: "/images/cecip_representatives_1782854765721.jpg"
   });
 
   // Edit / Add Event states
@@ -78,7 +78,7 @@ export default function PrivateAdminPortal({
 
   // Additional institutional images
   const [asociarseImageUrl, setAsociarseImageUrl] = useState(() => {
-    return localStorage.getItem("cecip_asociarse_img") || "/src/assets/images/collaboration_meeting_1782854725514.jpg";
+    return localStorage.getItem("cecip_asociarse_img") || "/images/collaboration_meeting_1782854725514.jpg";
   });
   const [bannerFlyerUrl, setBannerFlyerUrl] = useState(() => {
     return localStorage.getItem("cecip_banner_flyer") || "";
@@ -218,7 +218,7 @@ export default function PrivateAdminPortal({
         badge: newNewsForm.badge,
         description: newNewsForm.description,
         additionalInfo: newNewsForm.additionalInfo,
-        imageUrl: newNewsForm.imageUrl || "/src/assets/images/cecip_representatives_1782854765721.jpg",
+        imageUrl: newNewsForm.imageUrl || "/images/cecip_representatives_1782854765721.jpg",
         itemsList: ["Información del rubro actual", "Acceso directo a convenios CeCIP"]
       };
 
@@ -242,7 +242,7 @@ export default function PrivateAdminPortal({
         badge: "Actualidad",
         description: "",
         additionalInfo: "",
-        imageUrl: "/src/assets/images/cecip_representatives_1782854765721.jpg"
+        imageUrl: "/images/cecip_representatives_1782854765721.jpg"
       });
     } catch (e) {
       console.error("Error creating news:", e);
@@ -997,15 +997,15 @@ export default function PrivateAdminPortal({
                         },
                         {
                           label: "Reunión de Comisión y Autoridades",
-                          url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                          url: "/images/collaboration_meeting_1782854725514.jpg"
                         },
                         {
                           label: "Centro Comercial Paraná / Peatonal",
-                          url: "/src/assets/images/turismo_parana_1782854754924.jpg"
+                          url: "/images/turismo_parana_1782854754924.jpg"
                         },
                         {
                           label: "Actividad Comercial y Productiva",
-                          url: "/src/assets/images/dia_del_padre_1782854741068.jpg"
+                          url: "/images/dia_del_padre_1782854741068.jpg"
                         }
                       ]}
                     />
@@ -1043,19 +1043,19 @@ export default function PrivateAdminPortal({
                       presets={[
                         {
                           label: "Reunión de Socios y Pymes",
-                          url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                          url: "/images/collaboration_meeting_1782854725514.jpg"
                         },
                         {
                           label: "Representantes Institucionales",
-                          url: "/src/assets/images/cecip_representatives_1782854765721.jpg"
+                          url: "/images/cecip_representatives_1782854765721.jpg"
                         },
                         {
                           label: "Actividad Comercial Minorista",
-                          url: "/src/assets/images/dia_del_padre_1782854741068.jpg"
+                          url: "/images/dia_del_padre_1782854741068.jpg"
                         },
                         {
                           label: "Comercio y Turismo Paraná",
-                          url: "/src/assets/images/turismo_parana_1782854754924.jpg"
+                          url: "/images/turismo_parana_1782854754924.jpg"
                         }
                       ]}
                     />
@@ -1427,7 +1427,7 @@ export default function PrivateAdminPortal({
                     },
                     {
                       label: "Reunión Gremial / Institucional",
-                      url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                      url: "/images/collaboration_meeting_1782854725514.jpg"
                     }
                   ]}
                 />
@@ -1574,7 +1574,7 @@ export default function PrivateAdminPortal({
                     },
                     {
                       label: "Reunión Gremial / Institucional",
-                      url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                      url: "/images/collaboration_meeting_1782854725514.jpg"
                     }
                   ]}
                 />
@@ -1654,7 +1654,7 @@ export default function PrivateAdminPortal({
                   },
                   {
                     label: "Reunión Gremial / Institucional",
-                    url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                    url: "/images/collaboration_meeting_1782854725514.jpg"
                   }
                 ]}
               />
@@ -1715,19 +1715,19 @@ export default function PrivateAdminPortal({
                   },
                   {
                     label: "Reunión de Socios y Autoridades",
-                    url: "/src/assets/images/collaboration_meeting_1782854725514.jpg"
+                    url: "/images/collaboration_meeting_1782854725514.jpg"
                   },
                   {
                     label: "Actividad Comercial Minorista",
-                    url: "/src/assets/images/dia_del_padre_1782854741068.jpg"
+                    url: "/images/dia_del_padre_1782854741068.jpg"
                   },
                   {
                     label: "Comercio y Turismo Paraná",
-                    url: "/src/assets/images/turismo_parana_1782854754924.jpg"
+                    url: "/images/turismo_parana_1782854754924.jpg"
                   },
                   {
                     label: "Representantes y Prensa",
-                    url: "/src/assets/images/cecip_representatives_1782854765721.jpg"
+                    url: "/images/cecip_representatives_1782854765721.jpg"
                   }
                 ]}
               />

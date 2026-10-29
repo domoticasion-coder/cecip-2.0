@@ -37,15 +37,16 @@ import SubPageView from "./components/SubPageView";
 import CecipCopilotWidget from "./components/CecipCopilotWidget";
 import ComercIASeccion from "./components/ComercIASeccion";
 import IntroWeb from "./components/IntroWeb";
+import HeroScroll from "./components/HeroScroll";
 import { ALL_CECIP_SOCIOS } from "./data/sociosData";
 import { Database } from "lucide-react";
 
 // Image constants pointing to the assets
 const IMAGE_FACADE = "https://i.postimg.cc/WpC996c2/cecip-fachada-r8rfoy7572gdw9e5kbngeimw58imq1bl0s153k6uq8.jpg";
-const IMAGE_MEETING = "/src/assets/images/collaboration_meeting_1782854725514.jpg";
-const IMAGE_NEWS_PADRE = "/src/assets/images/dia_del_padre_1782854741068.jpg";
-const IMAGE_NEWS_TURISMO = "/src/assets/images/turismo_parana_1782854754924.jpg";
-const IMAGE_NEWS_SELECCION = "/src/assets/images/cecip_representatives_1782854765721.jpg";
+const IMAGE_MEETING = "/images/collaboration_meeting_1782854725514.jpg";
+const IMAGE_NEWS_PADRE = "/images/dia_del_padre_1782854741068.jpg";
+const IMAGE_NEWS_TURISMO = "/images/turismo_parana_1782854754924.jpg";
+const IMAGE_NEWS_SELECCION = "/images/cecip_representatives_1782854765721.jpg";
 
 interface ContentDetail {
   title: string;
@@ -561,7 +562,8 @@ export default function App() {
     };
   });
   const [asociarseImage, setAsociarseImage] = useState(() => {
-    return localStorage.getItem("cecip_asociarse_img") || IMAGE_MEETING;
+    // rutas viejas a /src/assets no existen en la web publicada
+    return (localStorage.getItem("cecip_asociarse_img") || IMAGE_MEETING).replace("/src/assets/images/", "/images/");
   });
 
   // Navigation states
@@ -1207,73 +1209,15 @@ export default function App() {
       {/* VIEW SWITCHER: HOME SECTIONS OR SUBPAGE TAB */}
       {currentView === "home" ? (
         <main id="main-home-content">
-          {/* 3. HERO SECTION */}
-          <section className="relative overflow-hidden pt-12 sm:pt-16 pb-20 sm:pb-24 px-3 sm:px-6 lg:px-8 bg-gradient-to-b from-[#eef7ff]/50 via-white to-white">
-        
-        {/* Soft background glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#d9e6ff]/40 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-[1440px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 items-center gap-10 lg:gap-12 relative z-10">
-          
-          {/* Hero text (Left side) */}
-          <div className="lg:col-span-6 flex flex-col items-start text-left">
-            <p className="text-[#00a3e0] font-bold text-xl sm:text-2xl mb-4 tracking-tight">
-              {heroInfo.subtitle}
-            </p>
-            <h1 className="text-3xl sm:text-4xl lg:text-[46px] font-bold text-[#1e293b] leading-[1.18] mb-6">
-              {heroInfo.title}
-            </h1>
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-8 max-w-xl">
-              {heroInfo.description}
-            </p>
-            
-            <div className="flex items-center">
-              <button 
-                onClick={() => scrollToSection("asociarse-section")}
-                className="bg-[#00a3e0] hover:bg-[#0c2356] text-white font-semibold text-sm px-8 py-3 rounded-lg shadow-md shadow-[#00a3e0]/20 transition-all cursor-pointer"
-              >
-                Súmate
-              </button>
-              <button 
-                onClick={() => openContentModal("nuestros objetivos")}
-                className="text-[#0c2356] hover:text-[#00a3e0] hover:underline font-semibold text-sm ml-6 cursor-pointer"
-              >
-                Nuestros objetivos
-              </button>
-            </div>
-          </div>
-
-          {/* Hero Image (Right side) - Grayscale historical facade in organic blob with blue highlights */}
-          <div className="lg:col-span-6 flex justify-center items-center relative py-6">
-            
-            {/* Background cyan/sky fluid blob */}
-            <div 
-              className="absolute -top-4 -left-4 sm:-top-8 sm:-left-8 w-64 h-64 sm:w-80 sm:h-80 bg-[#bae6fd]/55 pointer-events-none transition-all"
-              style={{ borderRadius: "60% 40% 50% 50% / 50% 60% 40% 50%" }}
-            />
-
-            {/* Foreground CeCIP navy fluid pill */}
-            <div 
-              className="absolute -bottom-4 -right-2 sm:-bottom-6 sm:-right-4 w-32 h-44 sm:w-40 sm:h-52 bg-[#0c2356]/85 pointer-events-none z-20 mix-blend-multiply transition-all"
-              style={{ borderRadius: "40% 60% 60% 40% / 50% 50% 50% 50%" }}
-            />
-
-            {/* Central blob container with high-contrast grayscale building facade */}
-            <div 
-              className="w-[290px] h-[320px] sm:w-[400px] sm:h-[440px] lg:w-[440px] lg:h-[460px] overflow-hidden shadow-2xl relative z-10 bg-slate-100 transition-transform duration-500 hover:scale-[1.01]"
-              style={{ borderRadius: "50% 50% 45% 55% / 55% 45% 55% 45%" }}
-            >
-              <img 
-                src={heroInfo.imageUrl} 
-                alt="Fachada histórica de CeCIP" 
-                className="w-full h-full object-cover grayscale contrast-110 brightness-95 scale-105"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </div>
-
-        </div>
-      </section>
+          {/* 3. HERO: historia con scroll (la fachada, los años, los sectores y la red de socios) */}
+          <HeroScroll
+            info={heroInfo}
+            socios={ALL_CECIP_SOCIOS.length}
+            entidades={dropdownMenus.entidades}
+            onSumate={() => scrollToSection("asociarse-section")}
+            onObjetivos={() => openContentModal("nuestros objetivos")}
+            onBeneficios={() => scrollToSection("beneficios-section")}
+          />
 
       {/* 3.5 PUBLIC CALENDAR SECTION */}
       <section 

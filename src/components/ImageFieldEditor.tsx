@@ -22,19 +22,19 @@ const DEFAULT_PRESETS: ImagePreset[] = [
   },
   {
     label: "Reunión de Directorio / Gremial",
-    url: "/src/assets/images/collaboration_meeting_1782854725514.jpg",
+    url: "/images/collaboration_meeting_1782854725514.jpg",
   },
   {
     label: "Comercio y Ventas Minoristas",
-    url: "/src/assets/images/dia_del_padre_1782854741068.jpg",
+    url: "/images/dia_del_padre_1782854741068.jpg",
   },
   {
     label: "Turismo y Desarrollo Paraná",
-    url: "/src/assets/images/turismo_parana_1782854754924.jpg",
+    url: "/images/turismo_parana_1782854754924.jpg",
   },
   {
     label: "Representantes y Autoridades",
-    url: "/src/assets/images/cecip_representatives_1782854765721.jpg",
+    url: "/images/cecip_representatives_1782854765721.jpg",
   },
   {
     label: "Auditorio y Capacitaciones",
