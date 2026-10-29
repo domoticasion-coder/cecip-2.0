@@ -35,6 +35,8 @@ import PrivateAdminPortal from "./components/PrivateAdminPortal";
 import ErpPortal from "./components/erp/ErpPortal";
 import SubPageView from "./components/SubPageView";
 import CecipCopilotWidget from "./components/CecipCopilotWidget";
+import ComercIASeccion from "./components/ComercIASeccion";
+import IntroWeb from "./components/IntroWeb";
 import { ALL_CECIP_SOCIOS } from "./data/sociosData";
 import { Database } from "lucide-react";
 
@@ -928,6 +930,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-800 antialiased selection:bg-cecip-blue selection:text-white">
+      <IntroWeb />
       
       {/* 1. TOP UTILITY BAR */}
       <div className="w-full bg-[#f8fafc] border-b border-slate-200/70 text-[13px] text-slate-600 py-2 px-3 sm:px-6 lg:px-8">
@@ -1542,6 +1545,9 @@ export default function App() {
 
         </div>
       </section>
+
+      {/* ComercIA Inteligente: historia con scroll */}
+      <ComercIASeccion />
 
       {/* 5. ASOCIARSE SECTION */}
       <section id="asociarse-section" className="py-20 px-3 sm:px-6 lg:px-8 bg-[#fafcff] overflow-hidden border-t border-slate-100">
