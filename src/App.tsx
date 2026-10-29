@@ -441,7 +441,7 @@ function eventoDesdeErp(e: EventoErp) {
     year: d.getFullYear(),
     titulo: e.titulo,
     type: capacitacion ? "Capacitación" : "Evento",
-    hora: `${e.hora_inicio ? e.hora_inicio.slice(0, 5) : d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} h`,
+    hora: `${e.hora_inicio ? e.hora_inicio.slice(0, 5) : d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })} h`,
     lugar: e.modalidad === "virtual" ? "Virtual" : e.lugar || "Sede CeCIP",
     orador: e.docente || "Centro Comercial e Industrial de Paraná",
     description: `${e.descripcion || ""}${clases}`.trim(),
