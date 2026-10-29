@@ -58,9 +58,10 @@ function fondo(p: number) {
   return `rgb(${c.join(",")})`;
 }
 
-// Guion del "video": en cada parada se queda quieto un rato y después se mueve a la siguiente
+// Guion del "video": en cada parada avanza despacito (para leer) y después pasa rápido a la siguiente
 const PARADAS = [0.02, 0.36, 0.63, 0.97];
-const QUIETO = 3400, MOVIMIENTO = 1700, QUIETO_FINAL = 5200, REBOBINADO = 1300;
+const QUIETO = 1900, MOVIMIENTO = 950, QUIETO_FINAL = 3200, REBOBINADO = 800;
+const DERIVA = 0.03; // cuánto sigue moviéndose la escena mientras se lee
 const TRAMOS = PARADAS.map((desde, k) => ({
   desde,
   hasta: k < PARADAS.length - 1 ? PARADAS[k + 1] : PARADAS[0],
@@ -75,7 +76,9 @@ function avanceEn(t: number) {
     if (t < INICIOS[k]) continue;
     const { desde, hasta, quieto, mov } = TRAMOS[k];
     const r = t - INICIOS[k];
-    return r < quieto ? desde : lerp(desde, hasta, suave(clamp((r - quieto) / mov)));
+    const leido = Math.min(1, desde + DERIVA);
+    if (r < quieto) return lerp(desde, leido, r / quieto);
+    return lerp(leido, hasta, suave(clamp((r - quieto) / mov)));
   }
   return PARADAS[0];
 }
@@ -96,7 +99,7 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
     if (!visible || pausa) return;
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
-      setT((v) => (v + Math.min(ahora - antes, 250)) % TOTAL);
+      setT((v) => (v + Math.min(ahora - antes, 1000)) % TOTAL);
       antes = ahora;
       raf = requestAnimationFrame(paso);
     };
