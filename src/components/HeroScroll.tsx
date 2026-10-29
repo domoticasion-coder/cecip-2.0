@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ArrowRight, Coffee, Cpu, Factory, Hammer, Laptop, Pill, Shirt, Store, Truck, Wheat, Wrench } from "lucide-react";
+import { Anchor, ArrowRight, Briefcase, Factory, Sparkles, Store, TrainFront, Users, Wheat } from "lucide-react";
 import { clamp, lerp, movimientoReducido, suave, tramo, useAvance } from "../lib/animacion";
 
 /**
@@ -27,45 +27,50 @@ interface Props {
 const FUNDACION = 1898;
 const HOY = new Date().getFullYear();
 
+// Fuentes: Municipalidad de Paraná (Ciudad y Memoria) y El Diario de Paraná (14/04/2024).
 const HITOS = [
-  { anio: "1898", texto: "Nace la Sociedad de Comerciantes, hoy CeCIP." },
-  { anio: "1920", texto: "Sede propia en pleno centro de la ciudad." },
-  { anio: "1970", texto: "Protagonistas del Parque Industrial Paraná." },
-  { anio: "Hoy", texto: "Capacitación, beneficios e innovación con IA." },
+  { anio: "1898", texto: "Un centenar de comerciantes funda el Centro Comercial de Paraná." },
+  { anio: "1930", texto: "Inaugura su sede propia frente a la plaza 1° de Mayo." },
+  { anio: "1952", texto: "Se fusiona con la Asociación Industrial: nace el CeCIP." },
+  { anio: "Hoy", texto: "Cámaras de Comercio, Industria, Servicios y Jóvenes." },
 ];
 
-// La red es una línea de tiempo: cada época es una "capa" de rubros (como en una red neuronal),
-// conectada con todos los de la época siguiente. Coordenadas en unidades del recuadro 0..100.
-const ORIGEN = { x: 10, y: 46 };
-const EPOCAS = [
-  { anio: "1920", titulo: "Comercio", x: 34, rubros: [
-    { icono: Store, nombre: "Almacenes", y: 24 },
-    { icono: Shirt, nombre: "Tiendas", y: 46 },
-    { icono: Wrench, nombre: "Ferreterías", y: 68 },
+// La red es la línea de tiempo: cada columna es un momento de la historia y cada nodo se conecta
+// con todos los de la columna siguiente (como las capas de una red neuronal). La columna de 1930
+// es la sede: ahí se achica la foto de la fachada. Coordenadas en unidades del recuadro 0..100.
+type Nodo = { icono: typeof Store; nombre: string; y: number };
+const SEDE = { x: 34, y: 47 };
+const COLUMNAS: { anio: string; titulo: string; x: number; nodos: Nodo[] }[] = [
+  { anio: "1898", titulo: "Origen", x: 9, nodos: [
+    { icono: Store, nombre: "Comercio", y: 20 },
+    { icono: Wheat, nombre: "Cereales", y: 38 },
+    { icono: Anchor, nombre: "Puerto", y: 56 },
+    { icono: TrainFront, nombre: "Ferrocarril", y: 74 },
   ] },
-  { anio: "1970", titulo: "Industria", x: 61, rubros: [
-    { icono: Factory, nombre: "Fábricas", y: 16 },
-    { icono: Wheat, nombre: "Agro", y: 36 },
-    { icono: Truck, nombre: "Logística", y: 56 },
-    { icono: Hammer, nombre: "Construcción", y: 76 },
+  { anio: "1930", titulo: "Sede propia", x: SEDE.x, nodos: [] },
+  { anio: "1952", titulo: "Fusión", x: 61, nodos: [
+    { icono: Store, nombre: "Centro Comercial", y: 32 },
+    { icono: Factory, nombre: "Asoc. Industrial", y: 62 },
   ] },
-  { anio: "Hoy", titulo: "Servicios", x: 88, rubros: [
-    { icono: Coffee, nombre: "Gastronomía", y: 20 },
-    { icono: Pill, nombre: "Salud", y: 38 },
-    { icono: Laptop, nombre: "Tecnología", y: 56 },
-    { icono: Cpu, nombre: "IA", y: 74 },
+  { anio: "Hoy", titulo: "Cámaras", x: 89, nodos: [
+    { icono: Store, nombre: "Comercio", y: 14 },
+    { icono: Factory, nombre: "Industria", y: 30 },
+    { icono: Briefcase, nombre: "Servicios", y: 46 },
+    { icono: Users, nombre: "Jóvenes", y: 62 },
+    { icono: Sparkles, nombre: "ComercIA", y: 78 },
   ] },
 ];
 const EJE_Y = 92;
 
-// conexiones: del origen a la primera época y de cada rubro a todos los de la época siguiente
+const puntos = (i: number) => (i === 1 ? [SEDE.y] : COLUMNAS[i].nodos.map((n) => n.y));
 const curva = (x1: number, y1: number, x2: number, y2: number) => {
   const m = (x1 + x2) / 2;
   return `M${x1} ${y1} C${m} ${y1} ${m} ${y2} ${x2} ${y2}`;
 };
-const CONEXIONES = EPOCAS.flatMap((e, i) => {
-  const previos = i === 0 ? [{ x: ORIGEN.x, y: ORIGEN.y }] : EPOCAS[i - 1].rubros.map((r) => ({ x: EPOCAS[i - 1].x, y: r.y }));
-  return previos.flatMap((a) => e.rubros.map((b) => ({ capa: i, d: curva(a.x, a.y, e.x, b.y) })));
+// cada nodo se une con todos los de la columna siguiente
+const CONEXIONES = COLUMNAS.slice(1).flatMap((c, k) => {
+  const i = k + 1, a = COLUMNAS[k];
+  return puntos(k).flatMap((y1) => puntos(i).map((y2) => ({ capa: i, d: curva(a.x, y1, c.x, y2) })));
 });
 
 export default function HeroScroll(props: Props) {
@@ -122,45 +127,43 @@ export default function HeroScroll(props: Props) {
               {/* red neuronal en el tiempo */}
               <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden>
                 <defs>
-                  <linearGradient id="hs-tiempo" x1="0" y1="0" x2="1" y2="0">
+                  {/* en unidades del recuadro: con objectBoundingBox las líneas rectas no se dibujan */}
+                  <linearGradient id="hs-tiempo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="0">
                     <stop offset="0" stopColor="#0c2356" />
                     <stop offset="1" stopColor="#00a3e0" />
                   </linearGradient>
                 </defs>
                 {/* eje de la línea de tiempo */}
-                <line x1={ORIGEN.x} y1={EJE_Y} x2={EPOCAS[2].x} y2={EJE_Y} stroke="#cbd5e1" strokeWidth=".5" strokeLinecap="round" opacity={aRed} />
-                <line x1={ORIGEN.x} y1={EJE_Y} x2={lerp(ORIGEN.x, EPOCAS[2].x, capa(2))} y2={EJE_Y} stroke="url(#hs-tiempo)" strokeWidth=".9" strokeLinecap="round" opacity={aRed} />
-                {[ORIGEN.x, ...EPOCAS.map((e) => e.x)].map((x, i) => (
-                  <line key={x} x1={x} y1={i === 0 ? ORIGEN.y + 9 : 82} x2={x} y2={EJE_Y} stroke="#00a3e0" strokeWidth=".3" strokeDasharray="1 1.2" opacity={(i === 0 ? aRed : capa(i - 1)) * 0.6} />
+                <line x1={COLUMNAS[0].x} y1={EJE_Y} x2={COLUMNAS[3].x} y2={EJE_Y} stroke="#cbd5e1" strokeWidth=".5" strokeLinecap="round" opacity={aRed} />
+                <line x1={COLUMNAS[0].x} y1={EJE_Y} x2={lerp(COLUMNAS[0].x, COLUMNAS[3].x, capa(3))} y2={EJE_Y} stroke="url(#hs-tiempo)" strokeWidth=".9" strokeLinecap="round" opacity={aRed} />
+                {COLUMNAS.map((c, i) => (
+                  <line key={c.anio} x1={c.x} y1={Math.max(...puntos(i)) + (i === 1 ? 13 : 6)} x2={c.x} y2={EJE_Y} stroke="#00a3e0" strokeWidth=".3" strokeDasharray="1 1.2" opacity={capa(i) * 0.6} />
                 ))}
-                {CONEXIONES.map((c, k) => {
-                  const t = tramo(capa(c.capa), 0, 1);
-                  return <path key={k} d={c.d} fill="none" stroke="url(#hs-tiempo)" strokeWidth={lerp(0.25, 0.4, aUnion)} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - t} opacity={lerp(0.35, 0.65, aUnion)} />;
-                })}
-                {/* impulsos que viajan a través del tiempo */}
-                {aUnion > 0.2 && CONEXIONES.filter((_, k) => k % 2 === 0).map((c, k) => (
+                {CONEXIONES.map((c, k) => (
+                  <path key={k} d={c.d} fill="none" stroke="url(#hs-tiempo)" strokeWidth={lerp(0.3, 0.45, aUnion)} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - capa(c.capa)} opacity={lerp(0.4, 0.7, aUnion)} />
+                ))}
+                {/* impulsos que viajan de 1898 a hoy */}
+                {aUnion > 0.2 && CONEXIONES.map((c, k) => (
                   <circle key={k} r=".75" fill="#00a3e0" className="hs-chispa">
-                    <animateMotion dur={`${1.6 + (k % 4) * 0.35}s`} begin={`${(k * 0.37) % 3}s`} repeatCount="indefinite" path={c.d} />
+                    <animateMotion dur={`${1.5 + (k % 4) * 0.3}s`} begin={`${c.capa * 0.5 + (k % 5) * 0.4}s`} repeatCount="indefinite" path={c.d} />
                   </circle>
                 ))}
               </svg>
 
-              {/* años del eje */}
-              {[{ x: ORIGEN.x, anio: "1898", t: aRed }, ...EPOCAS.map((e, i) => ({ x: e.x, anio: e.anio, t: capa(i) }))].map(({ x, anio: a, t }) => (
-                <div key={a} className="hs-hito absolute z-20" style={{ left: `${x}%`, top: `${EJE_Y}%`, opacity: t, transform: `translate(-50%, -50%) scale(${lerp(0.5, 1, t)})` }}>{a}</div>
+              {/* años del eje y nombre de cada momento */}
+              {COLUMNAS.map((c, i) => (
+                <div key={c.anio}>
+                  <div className="hs-hito absolute z-20" style={{ left: `${c.x}%`, top: `${EJE_Y}%`, opacity: capa(i), transform: `translate(-50%, -50%) scale(${lerp(0.5, 1, capa(i))})` }}>{c.anio}</div>
+                  <div className="hs-epoca absolute z-20" style={{ left: `${c.x}%`, top: "2%", opacity: capa(i), transform: `translate(-50%, ${(1 - capa(i)) * 12}px)` }}>{c.titulo}</div>
+                </div>
               ))}
 
-              {/* nombre de cada época */}
-              {EPOCAS.map((e, i) => (
-                <div key={e.titulo} className="hs-epoca absolute z-20" style={{ left: `${e.x}%`, top: "3%", opacity: capa(i), transform: `translate(-50%, ${(1 - capa(i)) * 12}px)` }}>{e.titulo}</div>
-              ))}
-
-              {/* rubros (neuronas) */}
-              {EPOCAS.flatMap((e, i) => e.rubros.map(({ icono: Icono, nombre, y }, k) => {
-                const t = suave(tramo(capa(i), k * 0.12, 0.55 + k * 0.12));
+              {/* nodos */}
+              {COLUMNAS.flatMap((c, i) => c.nodos.map(({ icono: Icono, nombre, y }, k) => {
+                const t = suave(tramo(capa(i), k * 0.1, 0.55 + k * 0.1));
                 return (
-                  <div key={nombre} className="absolute z-20 flex flex-col items-center" style={{ left: `${e.x}%`, top: `${y}%`, opacity: t, transform: `translate(-50%, -50%) scale(${lerp(0.3, 1, t)})` }}>
-                    <div className={`hs-neurona ${aUnion > 0.3 ? "hs-late" : ""} ${i === 2 ? "hs-neurona-hoy" : ""}`} style={{ animationDelay: `${i * 0.35 + k * 0.15}s` }}>
+                  <div key={`${i}-${nombre}`} className="absolute z-20 flex flex-col items-center" style={{ left: `${c.x}%`, top: `${y}%`, opacity: t, transform: `translate(-50%, -50%) scale(${lerp(0.3, 1, t)})` }}>
+                    <div className={`hs-neurona ${aUnion > 0.3 ? "hs-late" : ""} ${i === 3 ? "hs-neurona-hoy" : ""}`} style={{ animationDelay: `${i * 0.35 + k * 0.15}s` }}>
                       <Icono size={15} />
                     </div>
                     <span className="hs-rubro">{nombre}</span>
@@ -168,21 +171,20 @@ export default function HeroScroll(props: Props) {
                 );
               }))}
 
-              {/* fachada histórica: al llegar la red se achica y queda como origen de la línea de tiempo */}
-              <div className="absolute z-10 h-[86%] w-[78%] overflow-hidden bg-slate-100 shadow-2xl"
+              {/* fachada histórica (inaugurada en 1930): al llegar la red se achica y queda como el nodo de la sede */}
+              <div className={`absolute z-10 h-[86%] w-[78%] overflow-hidden bg-slate-100 shadow-2xl ${aUnion > 0.3 ? "hs-late" : ""}`}
                 style={{
-                  left: `${lerp(50, ORIGEN.x, aRed)}%`, top: `${lerp(50, ORIGEN.y, aRed)}%`,
+                  left: `${lerp(50, SEDE.x, aRed)}%`, top: `${lerp(50, SEDE.y, aRed)}%`,
                   borderRadius: aRed > 0.5 ? "50%" : "50% 50% 45% 55% / 55% 45% 55% 45%",
-                  transform: `translate(-50%, -50%) scale(${lerp(1, 0.22, aRed)})`,
+                  transform: `translate(-50%, -50%) scale(${lerp(1, 0.26, aRed)})`,
                   transition: "border-radius .5s ease",
-                  boxShadow: `0 0 0 ${lerp(0, 18, aRed)}px rgba(0,163,224,.18), 0 25px 50px -12px rgba(0,0,0,.25)`,
+                  boxShadow: `0 0 0 ${lerp(0, 14, aRed)}px rgba(0,163,224,.18), 0 25px 50px -12px rgba(0,0,0,.25)`,
                 }}>
                 <img src={props.info.imageUrl} alt="Fachada histórica del CeCIP" referrerPolicy="no-referrer"
                   className="h-full w-full object-cover"
                   style={{ filter: `grayscale(1) contrast(1.1) brightness(.95)`, transform: `scale(${lerp(1.05, 1.18, tramo(p, 0, 0.5))})` }} />
                 <div className="absolute inset-0 mix-blend-multiply" style={{ background: "linear-gradient(160deg, #7dd3fc, #00a3e0 55%, #0c2356)", opacity: aColor * 0.55 }} />
               </div>
-              <div className="hs-epoca absolute z-20" style={{ left: `${ORIGEN.x}%`, top: `${ORIGEN.y + 12}%`, opacity: tramo(aRed, 0.6, 1), transform: "translate(-50%, 0)" }}>CeCIP</div>
 
               {/* año que corre desde la fundación */}
               <div className="hs-anio font-display pointer-events-none absolute -left-[6%] bottom-[2%] z-30 select-none tabular-nums"

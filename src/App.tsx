@@ -101,8 +101,8 @@ const contentData: Record<string, ContentDetail> = {
     additionalInfo: "A lo largo de más de 125 años de trayectoria ininterrumpida, el CeCIP ha liderado gestiones fundamentales como la defensa del descanso dominical, el ordenamiento de las tasas comerciales locales, la peatonalización de la calle San Martín y el desarrollo conjunto del Parque Industrial de Paraná.",
     itemsList: [
       "1898: Fundación de la Sociedad de Comerciantes, hoy CeCIP.",
-      "1920: Adquisición de la histórica sede propia en pleno centro de la ciudad.",
-      "1970: Rol protagónico en la planificación del Parque Industrial Paraná.",
+      "1930: Inauguración de la sede propia frente a la plaza 1° de Mayo.",
+      "1952: Fusión con la Asociación Industrial de Paraná: nace el Centro Comercial e Industrial.",
       "Actualidad: Más de 120 años acompañando al comercio y la industria con soluciones del siglo XXI."
     ]
   },
