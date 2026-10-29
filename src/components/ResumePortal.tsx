@@ -1,7 +1,7 @@
 import { useState, useRef, ChangeEvent, FormEvent, DragEvent } from "react";
 import { Upload, FileText, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 import { CVSubmission } from "../types";
-import { bolsaService, storageService } from "../services";
+import { postularCv } from "../lib/erp";
 
 interface ResumePortalProps {
   onCVSubmitted?: (cv: CVSubmission) => void;
@@ -121,13 +121,15 @@ export default function ResumePortal({ onCVSubmitted }: ResumePortalProps) {
     setIsSubmitting(true);
 
     try {
-      let filePath = `/uploads/${file.name}`;
-      try {
-        const uploadRes = await storageService.uploadFile(file, "cvs");
-        filePath = uploadRes.filePath || uploadRes.url || filePath;
-      } catch (uploadErr) {
-        console.warn("Storage upload fallback:", uploadErr);
-      }
+      // El CV queda en el ERP del CeCIP (Bolsa de empleo), con el archivo en un almacenamiento privado
+      await postularCv({
+        nombre: formData.nombre.trim(),
+        email: formData.email.trim(),
+        telefono: formData.telefono.trim(),
+        area: formData.areaBusqueda,
+        tipoProfesional: formData.tipoProfesional,
+        comentarios: formData.comentarios,
+      }, file);
 
       const newCV: CVSubmission = {
         id: "cv-" + Date.now(),
@@ -138,18 +140,10 @@ export default function ResumePortal({ onCVSubmitted }: ResumePortalProps) {
         tipoProfesional: formData.tipoProfesional,
         fileName: file.name,
         fileSize: (file.size / (1024 * 1024)).toFixed(1) + " MB",
-        filePath: filePath,
         fechaSubida: new Date().toISOString().split("T")[0],
         comentarios: formData.comentarios,
         interesados: [],
       };
-
-      // Save to database
-      try {
-        await bolsaService.createCV(newCV);
-      } catch (dbErr) {
-        console.warn("Database createCv fallback:", dbErr);
-      }
 
       setIsSubmitting(false);
       setSubmitSuccess(true);

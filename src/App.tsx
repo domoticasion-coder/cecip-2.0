@@ -23,10 +23,13 @@ import {
   Calendar,
   Award,
   Clock,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { CVSubmission, WebNewsItem, ContactMessage } from "./types";
 import ResumePortal from "./components/ResumePortal";
+import { contenidoWeb, ERP_URL, type EventoErp, type NovedadErp } from "./lib/erp";
 import SociosPortal from "./components/SociosPortal";
 import PrivateAdminPortal from "./components/PrivateAdminPortal";
 import ErpPortal from "./components/erp/ErpPortal";
@@ -414,6 +417,60 @@ const contentData: Record<string, ContentDetail> = {
   }
 };
 
+// -----------------------------------------------------------------------------
+// Contenido que llega del ERP del CeCIP (eventos, capacitaciones y comunicados publicados)
+const MESES_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const DIAS_ES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+const BANNER_DEFECTO = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80";
+const pesosAr = (n: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
+
+function eventoDesdeErp(e: EventoErp) {
+  const d = new Date(e.fecha_inicio);
+  const capacitacion = e.tipo === "capacitacion";
+  const clases = e.cantidad_clases && e.cantidad_clases > 1
+    ? `\n\n${e.cantidad_clases} clases${e.dias_semana?.length ? `, los ${e.dias_semana.map((x) => DIAS_ES[x - 1]).join(" y ")}` : ""}${e.hora_inicio ? ` de ${e.hora_inicio.slice(0, 5)} a ${(e.hora_fin || "").slice(0, 5)} h` : ""}.`
+    : "";
+  const costo = Number(e.costo) || 0;
+  const noSocio = e.precio_no_socio !== null && e.precio_no_socio !== undefined ? Number(e.precio_no_socio) : null;
+  return {
+    id: e.id,
+    fecha: d.toLocaleDateString("es-AR"),
+    day: d.getDate(),
+    month: MESES_ES[d.getMonth()],
+    monthIndex: d.getMonth(),
+    year: d.getFullYear(),
+    titulo: e.titulo,
+    type: capacitacion ? "Capacitación" : "Evento",
+    hora: `${e.hora_inicio ? e.hora_inicio.slice(0, 5) : d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} h`,
+    lugar: e.modalidad === "virtual" ? "Virtual" : e.lugar || "Sede CeCIP",
+    orador: e.docente || "Centro Comercial e Industrial de Paraná",
+    description: `${e.descripcion || ""}${clases}`.trim(),
+    banner: e.imagen_url || BANNER_DEFECTO,
+    color: capacitacion ? "bg-rose-500" : "bg-[#00a3e0]",
+    precio: costo
+      ? `Socios ${pesosAr(costo)}${noSocio !== null && noSocio !== costo ? ` · No socios ${noSocio ? pesosAr(noSocio) : "sin cargo"}` : ""}`
+      : noSocio ? `Sin costo para socios · No socios ${pesosAr(noSocio)}` : "Actividad sin costo",
+    inscripcionUrl: e.slug_inscripcion ? `${ERP_URL}/portal/inscripcion/${e.slug_inscripcion}` : null,
+    abierta: e.inscripcion_abierta,
+  };
+}
+
+function novedadDesdeErp(n: NovedadErp): WebNewsItem {
+  const cuerpo = (n.cuerpo || "").trim();
+  const corte = cuerpo.length > 320 ? cuerpo.lastIndexOf(" ", 320) : -1;
+  return {
+    id: `erp-${n.id}`,
+    title: n.titulo,
+    date: new Date(n.fecha).toLocaleDateString("es-AR"),
+    category: "Comunicado",
+    badge: n.destacado ? "Destacado" : "CeCIP Paraná",
+    description: corte > 0 ? `${cuerpo.slice(0, corte)}…` : cuerpo,
+    additionalInfo: corte > 0 ? cuerpo.slice(corte).trim() : "",
+    imageUrl: n.imagen_url || BANNER_DEFECTO,
+    publicada: true,
+  };
+}
+
 const publicEvents = [
   {
     id: "web-ev-1",
@@ -483,7 +540,8 @@ const publicEvents = [
 
 export default function App() {
   // Public Events Calendar states
-  const [selectedWebEventId, setSelectedWebEventId] = useState<string>("web-ev-1");
+  const [selectedWebEventId, setSelectedWebEventId] = useState<string>("");
+  const [mesCal, setMesCal] = useState(() => ({ y: new Date().getFullYear(), m: new Date().getMonth() }));
   const [enrolledWebEvents, setEnrolledWebEvents] = useState<string[]>([]);
   const [eventsList, setEventsList] = useState<any[]>([]);
   const [heroInfo, setHeroInfo] = useState(() => {
@@ -609,14 +667,21 @@ export default function App() {
       setNews(JSON.parse(storedNews));
     }
 
-    // Initialize Events in localStorage if it doesn't exist
-    const storedEvents = localStorage.getItem("cecip_events");
-    if (!storedEvents) {
-      localStorage.setItem("cecip_events", JSON.stringify(publicEvents));
-      setEventsList(publicEvents);
-    } else {
-      setEventsList(JSON.parse(storedEvents));
-    }
+    // Eventos, capacitaciones y comunicados publicados en el ERP del CeCIP
+    contenidoWeb()
+      .then(({ eventos, novedades }) => {
+        const evs = eventos.map(eventoDesdeErp);
+        setEventsList(evs);
+        if (evs.length) {
+          setSelectedWebEventId(evs[0].id);
+          setMesCal({ y: evs[0].year, m: evs[0].monthIndex });
+        }
+        if (novedades.length) {
+          const deErp = novedades.map(novedadDesdeErp);
+          setNews((prev) => [...deErp, ...prev.filter((x) => !String(x.id).startsWith("erp-"))]);
+        }
+      })
+      .catch((err) => console.warn("No se pudo leer el contenido del ERP:", err));
 
     // Initialize Hero in localStorage matching exact cover
     const defaultHero = {
@@ -1263,7 +1328,15 @@ export default function App() {
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <Calendar className="text-[#00a3e0]" size={20} />
-                  <span className="font-extrabold text-slate-800 text-base">Julio 2026</span>
+                  <button type="button" aria-label="Mes anterior" className="p-1 rounded hover:bg-slate-100 cursor-pointer"
+                    onClick={() => setMesCal(({ y, m }) => (m === 0 ? { y: y - 1, m: 11 } : { y, m: m - 1 }))}>
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="font-extrabold text-slate-800 text-base min-w-[8.5rem] text-center">{MESES_ES[mesCal.m]} {mesCal.y}</span>
+                  <button type="button" aria-label="Mes siguiente" className="p-1 rounded hover:bg-slate-100 cursor-pointer"
+                    onClick={() => setMesCal(({ y, m }) => (m === 11 ? { y: y + 1, m: 0 } : { y, m: m + 1 }))}>
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
                 <span className="text-xs font-semibold text-[#0c2356] bg-sky-50 px-2.5 py-0.5 rounded border border-sky-100">
                   CeCIP Institucional
@@ -1281,26 +1354,17 @@ export default function App() {
                 <span>Dom</span>
               </div>
 
-              {/* July 2026 Calendar Grid */}
+              {/* Calendario del mes elegido (lunes a domingo) */}
               <div className="grid grid-cols-7 gap-2">
-                <div className="h-10 flex items-center justify-center text-slate-300 text-xs font-medium bg-slate-50/40 rounded">29</div>
-                <div className="h-10 flex items-center justify-center text-slate-300 text-xs font-medium bg-slate-50/40 rounded">30</div>
-
-                {Array.from({ length: 31 }, (_, i) => {
+                {Array.from({ length: (new Date(mesCal.y, mesCal.m, 1).getDay() + 6) % 7 }, (_, i) => (
+                  <div key={`v${i}`} className="h-10 rounded bg-slate-50/40" />
+                ))}
+                {Array.from({ length: new Date(mesCal.y, mesCal.m + 1, 0).getDate() }, (_, i) => {
                   const day = i + 1;
-                  const dayEvent = eventsList.find(e => e.day === day && e.month?.toLowerCase() === "julio");
+                  const dayEvent = eventsList.find((e) => e.day === day && e.monthIndex === mesCal.m && e.year === mesCal.y);
                   const isEvent = !!dayEvent;
                   const eventId = dayEvent?.id || "";
-                  
-                  let themeClass = "bg-[#00a3e0] text-white font-black hover:scale-105 shadow-sm";
-                  if (dayEvent) {
-                    if (dayEvent.color?.includes("emerald")) {
-                      themeClass = "bg-emerald-500 text-white font-black hover:scale-105 shadow-sm";
-                    } else if (dayEvent.color?.includes("rose")) {
-                      themeClass = "bg-rose-500 text-white font-black hover:scale-105 shadow-sm";
-                    }
-                  }
-
+                  const themeClass = `${dayEvent?.color || "bg-[#00a3e0]"} text-white font-black hover:scale-105 shadow-sm`;
                   const isSelected = selectedWebEventId === eventId;
 
                   return (
@@ -1329,16 +1393,12 @@ export default function App() {
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" />
-                    <span>Muestras</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                     <span className="w-2.5 h-2.5 rounded bg-rose-500 inline-block" />
                     <span>Capacitaciones</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                     <span className="w-2.5 h-2.5 rounded bg-[#00a3e0] inline-block" />
-                    <span>Seminarios</span>
+                    <span>Eventos</span>
                   </div>
                 </div>
               </div>
@@ -1348,7 +1408,15 @@ export default function App() {
             <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
               {(() => {
                 const event = eventsList.find(e => e.id === selectedWebEventId) || eventsList[0];
-                if (!event) return null;
+                if (!event) {
+                  return (
+                    <div className="p-10 text-center text-sm text-slate-500 flex flex-col items-center justify-center h-full gap-2">
+                      <Calendar className="text-slate-300" size={36} />
+                      <p>No hay actividades programadas por el momento.</p>
+                      <p className="text-xs">Las nuevas capacitaciones y eventos del CeCIP aparecen acá apenas se publican.</p>
+                    </div>
+                  );
+                }
                 const isEnrolled = enrolledWebEvents.includes(event.id);
 
                 return (
@@ -1388,22 +1456,31 @@ export default function App() {
                       </div>
 
                       <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs font-semibold text-[#00a3e0]">Sin Costo para Asociados</span>
+                        <span className="text-xs font-semibold text-[#00a3e0]">{event.precio || "Sin Costo para Asociados"}</span>
                         {isEnrolled ? (
                           <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded font-semibold text-xs flex items-center gap-1.5 border border-emerald-200">
                             <CheckCircle size={14} />
                             <span>¡Inscripto con Éxito!</span>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => {
-                              setEnrolledWebEvents([...enrolledWebEvents, event.id]);
-                              alert(`¡Inscripción Confirmada!\n\nTe has registrado para: "${event.titulo}".`);
-                            }}
-                            className="px-5 py-2.5 bg-[#00a3e0] hover:bg-[#0c2356] text-white rounded-lg font-medium text-xs shadow-sm transition-all cursor-pointer"
-                          >
-                            Reservar Lugar
-                          </button>
+                          event.inscripcionUrl ? (
+                            <a
+                              href={event.inscripcionUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setEnrolledWebEvents([...enrolledWebEvents, event.id])}
+                              className="px-5 py-2.5 bg-[#00a3e0] hover:bg-[#0c2356] text-white rounded-lg font-medium text-xs shadow-sm transition-all cursor-pointer"
+                            >
+                              Inscribirme
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => scrollToSection("asociarse-section")}
+                              className="px-5 py-2.5 bg-[#00a3e0] hover:bg-[#0c2356] text-white rounded-lg font-medium text-xs shadow-sm transition-all cursor-pointer"
+                            >
+                              Consultar
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
