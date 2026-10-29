@@ -945,37 +945,19 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* ERP Socios Login Button - Bloqueado en web pública ("Próximamente") */}
-            <div className="relative group/socioslogin inline-flex items-center">
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setProximamenteNotice("El portal de acceso para socios estará disponible próximamente.");
-                  setTimeout(() => setProximamenteNotice(null), 3500);
-                }}
-                className="text-xs font-semibold text-slate-500 hover:text-amber-800 bg-slate-50/90 hover:bg-amber-50/80 border border-slate-200/90 hover:border-amber-300 rounded-lg px-2.5 py-1 transition-all flex items-center gap-1.5 cursor-not-allowed select-none shadow-2xs"
-                title="Próximamente"
-                aria-disabled="true"
-              >
-                <div className="w-5 h-5 rounded-full bg-slate-200/80 group-hover/socioslogin:bg-amber-200 group-hover/socioslogin:text-amber-800 text-slate-500 flex items-center justify-center transition-colors">
-                  <User size={12} className="group-hover/socioslogin:hidden" />
-                  <Clock size={12} className="hidden group-hover/socioslogin:block text-amber-700 animate-spin-slow" />
-                </div>
-                <span className="group-hover/socioslogin:hidden text-slate-600">Login Socios</span>
-                <span className="hidden group-hover/socioslogin:inline text-amber-800 font-bold tracking-tight">
-                  Próximamente
-                </span>
-              </button>
-
-              {/* Tooltip flotante al acercar el mouse */}
-              <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900/95 backdrop-blur-sm text-white text-[11px] font-medium rounded-lg shadow-xl opacity-0 pointer-events-none group-hover/socioslogin:opacity-100 transition-all duration-200 z-50 whitespace-nowrap flex items-center gap-1.5 border border-slate-700/80">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <span className="font-bold text-amber-300">Próximamente</span>
-                <span className="text-slate-300">&bull; Sección en desarrollo</span>
-                <div className="absolute bottom-full right-4 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-b-slate-900/95"></div>
-              </div>
-            </div>
+            {/* Login de socios: lleva al Portal de Socios del ERP */}
+            <a
+              href={`${ERP_URL}/portal`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-slate-600 hover:text-white bg-slate-50/90 hover:bg-[#0c2356] border border-slate-200/90 hover:border-[#0c2356] rounded-lg px-2.5 py-1 transition-all flex items-center gap-1.5 cursor-pointer select-none shadow-2xs"
+              title="Ingresar al Portal de Socios"
+            >
+              <span className="w-5 h-5 rounded-full bg-sky-100 text-[#0c2356] flex items-center justify-center">
+                <User size={12} />
+              </span>
+              <span>Login Socios</span>
+            </a>
 
             {/* Search form bar */}
             <form onSubmit={handleSearch} className="relative w-44 sm:w-52">
@@ -1192,29 +1174,17 @@ export default function App() {
             >
               Comercios
             </button>
-            {/* Mobile Login Button - Bloqueado ("Próximamente") */}
-            <div className="relative group/mobilelogin inline-flex items-center">
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setProximamenteNotice("El portal de acceso para socios estará disponible próximamente.");
-                  setTimeout(() => setProximamenteNotice(null), 3500);
-                }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded border border-slate-200 text-slate-500 text-xs font-semibold bg-slate-50 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800 transition-colors cursor-not-allowed select-none"
-                title="Próximamente"
-                aria-disabled="true"
-              >
-                <User size={12} className="text-slate-400 group-hover/mobilelogin:hidden" />
-                <Clock size={12} className="hidden group-hover/mobilelogin:inline text-amber-700 animate-spin-slow" />
-                <span className="group-hover/mobilelogin:hidden">Login</span>
-                <span className="hidden group-hover/mobilelogin:inline text-[11px] text-amber-800 font-bold">Próximamente</span>
-              </button>
-
-              <div className="absolute top-full right-0 mt-1 px-2 py-0.5 bg-slate-900/95 text-white text-[10px] font-medium rounded shadow-lg opacity-0 pointer-events-none group-hover/mobilelogin:opacity-100 transition-all duration-150 z-50 whitespace-nowrap border border-slate-700">
-                <span className="text-amber-300 font-bold">Próximamente</span>
-              </div>
-            </div>
+            {/* Login de socios (celular): lleva al Portal de Socios del ERP */}
+            <a
+              href={`${ERP_URL}/portal`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded border border-slate-200 text-slate-600 text-xs font-semibold bg-slate-50 hover:bg-[#0c2356] hover:border-[#0c2356] hover:text-white transition-colors cursor-pointer select-none"
+              title="Ingresar al Portal de Socios"
+            >
+              <User size={12} />
+              <span>Login</span>
+            </a>
             <button 
               onClick={() => {
                 if (currentView === "home") {
