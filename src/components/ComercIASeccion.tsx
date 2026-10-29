@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowRight, Camera, Pause, Play, Rocket, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowRight, Camera, Pause, Play, Rocket, Sparkles, Users, Volume2, VolumeX, Zap } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
 import { clamp, lerp, movimientoReducido, suave, tramo } from "../lib/animacion";
 
 /**
  * ComercIA Inteligente: una animación tipo video (4 capítulos) que se reproduce sola al verla.
  * Un comercio del CeCIP se transforma: vidriera → tienda online → IA que atiende → ventas que crecen.
- * Se puede pausar y saltar a cada capítulo. Con "reducir movimiento" del sistema se muestra una versión estática.
+ * Se puede pausar y saltar a cada capítulo, y activar la voz (narración grabada con ElevenLabs en /public/audio).
+ * Con "reducir movimiento" del sistema se muestra una versión estática.
  */
 
 const URL_ADHESION = "https://iec-ia.com.ar/formulariofactoria.html";
 
-const CAPITULOS = [
+const CAPITULOS: { eyebrow: string; titulo: string; destacado?: string; texto: string }[] = [
   {
-    eyebrow: "Tu comercio, hoy",
-    titulo: "Tu vidriera, en todas partes.",
-    texto: "ComercIA Inteligente es el programa del CeCIP junto al Instituto IEC y FactorIA para que cada comercio de Paraná dé el salto a la era digital, con condiciones preferenciales para socios.",
+    eyebrow: "Comerciante, una pregunta",
+    titulo: "Tus clientes ya están en el celular.",
+    destacado: "¿Y tu comercio?",
+    texto: "ComercIA Inteligente: el programa del CeCIP, el Instituto IEC y FactorIA para que tu negocio venda más con tecnología e IA.",
   },
   {
     eyebrow: "Desarrollo digital",
@@ -39,6 +41,13 @@ const PROXIMOS = [
   { icono: Users, texto: "Simposios tecnológicos mensuales" },
   { icono: Rocket, texto: "IEC Tech Experience" },
   { icono: Zap, texto: "Sistemas smart y ahorro de energía" },
+];
+
+// Lo que hacen los clientes desde el celular (aparece alrededor del local en el capítulo 1)
+const CLIENTES = [
+  { texto: "🔎 «zapatillas en Paraná»", x: "-4%", y: "8%" },
+  { texto: "🛒 Compró online", x: "62%", y: "2%" },
+  { texto: "💬 «¿Tenés stock?»", x: "66%", y: "78%" },
 ];
 
 const CHATS = [
@@ -83,11 +92,44 @@ function avanceEn(t: number) {
   return PARADAS[0];
 }
 
-/** Reloj del video: corre solo mientras la sección se ve en pantalla y no está en pausa */
+function tramoDe(t: number) {
+  let k = 0;
+  while (k < INICIOS.length - 1 && t >= INICIOS[k + 1]) k++;
+  return k;
+}
+
+/**
+ * Reloj del video: corre solo mientras la sección se ve en pantalla y no está en pausa.
+ * Con la voz activada, al empezar cada capítulo suena su frase y el video no pasa al siguiente hasta que termina.
+ */
 function useVideo(ref: React.RefObject<HTMLElement | null>) {
   const [t, setT] = useState(0);
+  const tRef = useRef(0);
   const [pausa, setPausa] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [voz, setVoz] = useState(false);
+  const vozRef = useRef(false);
+  const audios = useRef<HTMLAudioElement[]>([]);
+  const sonando = useRef<boolean[]>([]);
+
+  const callar = () => audios.current.forEach((a, k) => { a.pause(); sonando.current[k] = false; });
+  const hablar = (k: number) => {
+    if (!vozRef.current) return;
+    callar();
+    if (!audios.current[k]) {
+      const a = new Audio(`/audio/comercia-${k + 1}.mp3`);
+      const fin = () => { sonando.current[k] = false; };
+      a.addEventListener("ended", fin);
+      a.addEventListener("error", fin);
+      audios.current[k] = a;
+    }
+    const a = audios.current[k];
+    a.currentTime = 0;
+    sonando.current[k] = true;
+    a.play().catch(() => { sonando.current[k] = false; });
+  };
+  const mover = (nuevo: number) => { tRef.current = nuevo; setT(nuevo); };
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -95,18 +137,43 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
     io.observe(el);
     return () => io.disconnect();
   }, [ref]);
+
   useEffect(() => {
-    if (!visible || pausa) return;
+    if (!visible || pausa) { callar(); return; }
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
-      setT((v) => (v + Math.min(ahora - antes, 1000)) % TOTAL);
+      const v = tRef.current;
+      let nv = (v + Math.min(ahora - antes, 1000)) % TOTAL;
       antes = ahora;
+      const k = tramoDe(v);
+      const limite = INICIOS[k] + TRAMOS[k].quieto;
+      if (vozRef.current && sonando.current[k] && v <= limite && nv > limite) nv = limite; // espera a la voz
+      const k2 = tramoDe(nv);
+      if (k2 !== k || nv < v) hablar(k2);
+      mover(nv);
       raf = requestAnimationFrame(paso);
     };
     raf = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(raf);
   }, [visible, pausa]);
-  return { p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, irA: (k: number) => { setT(INICIOS[k]); setPausa(false); } };
+
+  useEffect(() => () => callar(), []);
+
+  return {
+    p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, voz,
+    irA: (k: number) => { mover(INICIOS[k]); setPausa(false); hablar(k); },
+    alternarVoz: () => {
+      const nueva = !vozRef.current;
+      vozRef.current = nueva;
+      setVoz(nueva);
+      if (!nueva) return callar();
+      // al activarla, el capítulo actual arranca de nuevo con su frase
+      const k = tramoDe(tRef.current);
+      mover(INICIOS[k]);
+      setPausa(false);
+      hablar(k);
+    },
+  };
 }
 
 export default function ComercIASeccion() {
@@ -116,7 +183,7 @@ export default function ComercIASeccion() {
 
 function ComercIAVideo() {
   const ref = useRef<HTMLElement>(null);
-  const { p, tiempo, pausa, setPausa, irA } = useVideo(ref);
+  const { p, tiempo, pausa, setPausa, irA, voz, alternarVoz } = useVideo(ref);
   const n = CAPITULOS.length;
   const activo = Math.min(n - 1, Math.floor(p * n + 0.0001));
   const oscuro = p > 0.42;
@@ -152,7 +219,10 @@ function ComercIAVideo() {
                   <div className={`font-display text-sm font-semibold ${oscuro ? "text-sky-300" : "text-[#00a3e0]"}`}>
                     0{i + 1} <span className="mx-1 opacity-50">—</span> {c.eyebrow}
                   </div>
-                  <h2 className={`font-display mt-2 text-[1.9rem] font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl ${oscuro ? "text-white" : "text-[#0c2356]"}`}>{c.titulo}</h2>
+                  <h2 className={`font-display mt-2 text-[1.9rem] font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl ${oscuro ? "text-white" : "text-[#0c2356]"}`}>
+                    {c.titulo}
+                    {c.destacado && <span className="cia-destacado mt-1 block text-[#00a3e0]">{c.destacado}</span>}
+                  </h2>
                   <p className={`mt-4 max-w-md text-sm leading-relaxed sm:text-base ${oscuro ? "text-slate-300" : "text-slate-600"}`}>{c.texto}</p>
                   {i === n - 1 && (
                     <>
@@ -261,6 +331,11 @@ function ComercIAVideo() {
                   </g>
                 </g>
               </svg>
+              {CLIENTES.map((c, k) => (
+                <div key={c.texto} className="cia-cliente" style={{ left: c.x, top: c.y, opacity: 1 - aDigital, animationDelay: `${0.4 + k * 0.45}s, ${k * 0.8}s` }}>
+                  <span className="cia-cliente-cel" />{c.texto}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -280,6 +355,11 @@ function ComercIAVideo() {
           <button type="button" onClick={() => setPausa(!pausa)} aria-label={pausa ? "Reproducir" : "Pausar"}
             className={`grid h-9 w-9 cursor-pointer place-items-center rounded-full border transition-colors ${oscuro ? "border-white/25 text-white hover:bg-white/10" : "border-slate-300 text-[#0c2356] hover:bg-white"}`}>
             {pausa ? <Play size={15} /> : <Pause size={15} />}
+          </button>
+          <button type="button" onClick={alternarVoz} aria-pressed={voz}
+            className={`flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-xs font-bold transition-colors ${voz ? "bg-[#00a3e0] text-white" : oscuro ? "border border-white/25 text-white hover:bg-white/10" : "cia-escuchar border border-[#00a3e0] bg-white text-[#0c2356]"}`}>
+            {voz ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            {voz ? "Voz activada" : "Escuchar"}
           </button>
           <div className="flex gap-1.5 sm:hidden">
             {CAPITULOS.map((_, i) => (
@@ -344,7 +424,7 @@ function ComercIAEstatica() {
           {CAPITULOS.map((c, i) => (
             <div key={i} className="rounded-2xl bg-white/90 p-6 shadow-sm">
               <div className="text-sm font-semibold text-[#00a3e0]">0{i + 1} — {c.eyebrow}</div>
-              <h3 className="font-display mt-1 text-2xl font-bold text-[#0c2356]">{c.titulo}</h3>
+              <h3 className="font-display mt-1 text-2xl font-bold text-[#0c2356]">{c.titulo} {c.destacado && <span className="text-[#00a3e0]">{c.destacado}</span>}</h3>
               <p className="mt-2 text-sm text-slate-600">{c.texto}</p>
             </div>
           ))}
@@ -364,6 +444,18 @@ const CSS = `
 @media (max-width: 1023px) { .cia-halo { left: 50%; top: 66%; width: 620px; height: 620px; } }
 /* en celular el texto del último capítulo ocupa más: el gráfico queda de fondo */
 @media (max-width: 1023px) { .cia-objeto { opacity: calc(1 - var(--fin) * .8); } }
+.cia-destacado { animation: cia-latido 2.4s ease-in-out infinite; }
+@keyframes cia-latido { 0%, 100% { text-shadow: 0 0 0 rgba(0,163,224,0); } 50% { text-shadow: 0 0 28px rgba(0,163,224,.45); } }
+.cia-cliente { position: absolute; z-index: 5; display: flex; align-items: center; gap: .4rem; white-space: nowrap; pointer-events: none;
+  padding: .45rem .75rem; border-radius: 999px; font-size: 12px; font-weight: 600; color: #0c2356; background: #fff;
+  border: 1px solid #bae6fd; box-shadow: 0 12px 28px -12px rgba(12,35,86,.45);
+  transform: scale(0); animation: cia-aparece .5s cubic-bezier(.2,.9,.3,1.4) forwards, cia-vaiven 3.2s ease-in-out infinite; }
+.cia-cliente-cel { width: 9px; height: 14px; border-radius: 3px; border: 2px solid #00a3e0; }
+@keyframes cia-aparece { to { transform: scale(1); } }
+@keyframes cia-vaiven { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+.cia-escuchar { animation: cia-pulso 2s ease-out infinite; }
+@keyframes cia-pulso { 0% { box-shadow: 0 0 0 0 rgba(0,163,224,.55); } 100% { box-shadow: 0 0 0 12px rgba(0,163,224,0); } }
+@media (max-width: 640px) { .cia-cliente { font-size: 10.5px; padding: .35rem .6rem; } }
 .cia-flota { animation: cia-flota 6s ease-in-out infinite; }
 @keyframes cia-flota { 0%, 100% { translate: 0 -6px; } 50% { translate: 0 8px; } }
 .cia-chip { display: flex; align-items: center; gap: .45rem; border-radius: .75rem; padding: .5rem .7rem; font-size: .75rem; font-weight: 600;
