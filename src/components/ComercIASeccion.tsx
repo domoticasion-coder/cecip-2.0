@@ -92,6 +92,8 @@ function avanceEn(t: number) {
   return PARADAS[0];
 }
 
+const MUSICA_ALTA = 0.32, MUSICA_BAJA = 0.1;
+
 function tramoDe(t: number) {
   let k = 0;
   while (k < INICIOS.length - 1 && t >= INICIOS[k + 1]) k++;
@@ -100,7 +102,8 @@ function tramoDe(t: number) {
 
 /**
  * Reloj del video: corre solo mientras la sección se ve en pantalla y no está en pausa.
- * Con la voz activada, al empezar cada capítulo suena su frase y el video no pasa al siguiente hasta que termina.
+ * Con el sonido activado suena música de fondo y, al empezar cada capítulo, su frase (la música baja mientras habla);
+ * el video no pasa al siguiente capítulo hasta que termina la frase.
  */
 function useVideo(ref: React.RefObject<HTMLElement | null>) {
   const [t, setT] = useState(0);
@@ -111,14 +114,38 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
   const vozRef = useRef(false);
   const audios = useRef<HTMLAudioElement[]>([]);
   const sonando = useRef<boolean[]>([]);
+  const musica = useRef<HTMLAudioElement | null>(null);
+  const fundido = useRef(0);
 
+  // la música sube y baja de a poco (más baja mientras habla la voz)
+  const volumenMusica = (destino: number) => {
+    const m = musica.current;
+    if (!m) return;
+    clearInterval(fundido.current);
+    fundido.current = window.setInterval(() => {
+      const d = destino - m.volume;
+      if (Math.abs(d) < 0.02) { m.volume = destino; clearInterval(fundido.current); }
+      else m.volume = clamp(m.volume + Math.sign(d) * 0.02);
+    }, 40);
+  };
+  const sonarMusica = () => {
+    if (!musica.current) {
+      musica.current = new Audio("/audio/comercia-musica.mp3");
+      musica.current.loop = true;
+      musica.current.volume = 0;
+    }
+    musica.current.play().catch(() => {});
+    volumenMusica(sonando.current.some(Boolean) ? MUSICA_BAJA : MUSICA_ALTA);
+  };
   const callar = () => audios.current.forEach((a, k) => { a.pause(); sonando.current[k] = false; });
+  const apagar = () => { callar(); clearInterval(fundido.current); musica.current?.pause(); };
   const hablar = (k: number) => {
     if (!vozRef.current) return;
     callar();
+    volumenMusica(MUSICA_BAJA);
     if (!audios.current[k]) {
       const a = new Audio(`/audio/comercia-${k + 1}.mp3`);
-      const fin = () => { sonando.current[k] = false; };
+      const fin = () => { sonando.current[k] = false; volumenMusica(MUSICA_ALTA); };
       a.addEventListener("ended", fin);
       a.addEventListener("error", fin);
       audios.current[k] = a;
@@ -139,7 +166,8 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 
   useEffect(() => {
-    if (!visible || pausa) { callar(); return; }
+    if (!visible || pausa) { apagar(); return; }
+    if (vozRef.current) sonarMusica();
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
       const v = tRef.current;
@@ -157,7 +185,7 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
     return () => cancelAnimationFrame(raf);
   }, [visible, pausa]);
 
-  useEffect(() => () => callar(), []);
+  useEffect(() => () => apagar(), []);
 
   return {
     p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, voz,
@@ -166,7 +194,8 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
       const nueva = !vozRef.current;
       vozRef.current = nueva;
       setVoz(nueva);
-      if (!nueva) return callar();
+      if (!nueva) return apagar();
+      sonarMusica();
       // al activarla, el capítulo actual arranca de nuevo con su frase
       const k = tramoDe(tRef.current);
       mover(INICIOS[k]);
@@ -359,7 +388,7 @@ function ComercIAVideo() {
           <button type="button" onClick={alternarVoz} aria-pressed={voz}
             className={`flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-xs font-bold transition-colors ${voz ? "bg-[#00a3e0] text-white" : oscuro ? "border border-white/25 text-white hover:bg-white/10" : "cia-escuchar border border-[#00a3e0] bg-white text-[#0c2356]"}`}>
             {voz ? <Volume2 size={15} /> : <VolumeX size={15} />}
-            {voz ? "Voz activada" : "Escuchar"}
+            {voz ? "Sonido activado" : "Activar sonido"}
           </button>
           <div className="flex gap-1.5 sm:hidden">
             {CAPITULOS.map((_, i) => (
