@@ -275,7 +275,7 @@ function ComercIAVideo() {
 
           {/* La app en tres celulares */}
           <div className="cia-objeto relative flex h-full items-center justify-center lg:col-span-7 lg:col-start-6" style={{ ["--fin" as string]: tramo(p, 0.76, 0.84) } as CSSProperties}>
-            <Vitrina p={p} activo={activo} giro={giro} />
+            <Vitrina p={p} activo={activo} giro={giro} sonido={voz} />
           </div>
         </div>
 
@@ -329,19 +329,71 @@ function Firma({ claro = false }: { claro?: boolean }) {
 }
 
 /** Tres celulares con capturas reales de la web app; cambian de pantalla en cada capítulo */
-function Vitrina({ p, activo, giro }: { p: number; activo: number; giro: number }) {
+/** "Whoosh" de giro hecho con Web Audio (ruido filtrado que barre de grave a agudo), sin archivos */
+let audioCtx: AudioContext | null = null;
+function sonarGiro() {
+  try {
+    audioCtx ??= new AudioContext();
+    const ctx = audioCtx, ahora = ctx.currentTime, dur = 0.55;
+    const ruido = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const datos = ruido.getChannelData(0);
+    for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+    const fuente = ctx.createBufferSource();
+    fuente.buffer = ruido;
+    const filtro = ctx.createBiquadFilter();
+    filtro.type = "bandpass";
+    filtro.Q.value = 1.4;
+    filtro.frequency.setValueAtTime(320, ahora);
+    filtro.frequency.exponentialRampToValueAtTime(2800, ahora + dur * 0.55);
+    filtro.frequency.exponentialRampToValueAtTime(900, ahora + dur);
+    const vol = ctx.createGain();
+    vol.gain.setValueAtTime(0.0001, ahora);
+    vol.gain.exponentialRampToValueAtTime(0.32, ahora + dur * 0.45);
+    vol.gain.exponentialRampToValueAtTime(0.0001, ahora + dur);
+    fuente.connect(filtro).connect(vol).connect(ctx.destination);
+    fuente.start(ahora);
+  } catch {
+    /* sin Web Audio: sin sonido */
+  }
+}
+
+// Posición de los tres celulares en el carrusel: 0 = centro, -1 = izquierda, 1 = derecha
+const LADO_DE_HUECO: Record<number, 0 | 1 | 2> = { [-1]: 0, 0: 1, 1: 2 };
+
+function Vitrina({ p, activo, giro, sonido }: { p: number; activo: number; giro: number; sonido: boolean }) {
   const n = ESCENAS.length;
   const local = clamp(p * n - activo); // avance dentro del capítulo (para el scroll de la pantalla)
   const { icono: Icono, texto } = ESCENAS[activo].etiqueta;
+  // el carrusel gira un lugar en cada cambio de capítulo (suave alrededor del cambio)
+  let vueltas = 0;
+  for (let i = 1; i < n; i++) vueltas += suave(tramo(p, i / n - 0.035, i / n + 0.035));
+
+  const anterior = useRef(activo);
+  useEffect(() => {
+    if (anterior.current !== activo && sonido) sonarGiro();
+    anterior.current = activo;
+  }, [activo, sonido]);
   return (
     <div className="cia-vitrina relative w-full max-w-[640px]" style={{ perspective: "1400px" }}>
       <div className="cia-flota relative mx-auto aspect-[1.18] w-full" style={{ transformStyle: "preserve-3d", transform: `rotateY(${giro}deg)` }}>
-        {([0, 2, 1] as const).map((lado) => {
-          const centro = lado === 1;
-          const x = centro ? 0 : lado === 0 ? -1 : 1;
+        {[0, 1, 2].map((k) => {
+          // ángulo del celular en el círculo del carrusel (0° = adelante)
+          let ang = ((k - vueltas) * 120) % 360;
+          if (ang > 180) ang -= 360;
+          if (ang <= -180) ang += 360;
+          const rad = (ang * Math.PI) / 180;
+          const frente = (Math.cos(rad) + 1) / 2; // 1 adelante, 0 atrás
+          const hueco = Math.round(ang / 120) as -1 | 0 | 1;
+          const lado = LADO_DE_HUECO[hueco] ?? 1;
+          const centro = hueco === 0;
           return (
-            <div key={lado} className={`cia-tel absolute top-1/2 ${centro ? "z-10 w-[38%]" : "w-[30%]"}`}
-              style={{ left: `${50 + x * 31}%`, transform: `translate(-50%, -50%) translateZ(${centro ? 60 : -40}px) rotateY(${x * -16}deg)`, filter: centro ? undefined : "brightness(.78)" }}>
+            <div key={k} className="cia-tel absolute left-1/2 top-1/2 w-[38%]"
+              style={{
+                zIndex: Math.round(frente * 10),
+                transform: `translate(-50%, -50%) translate3d(${Math.sin(rad) * 82}%, 0, ${lerp(-260, 60, frente)}px) rotateY(${-Math.sin(rad) * 28}deg) scale(${lerp(0.72, 1, frente)})`,
+                filter: `brightness(${lerp(0.55, 1, frente)})`,
+                transition: "transform .5s cubic-bezier(.2,.8,.2,1), filter .5s", // suaviza también los saltos de capítulo
+              }}>
               <div className="cia-tel-pantalla">
                 <div className="cia-tel-barra"><span>9:41</span><span className="cia-tel-iconos" /></div>
                 <div className="absolute inset-x-0 bottom-0 top-[5.5%] overflow-hidden">
@@ -417,7 +469,7 @@ const CSS = `
 @keyframes cia-latido { 0%, 100% { text-shadow: 0 0 0 rgba(0,163,224,0); } 50% { text-shadow: 0 0 28px rgba(0,163,224,.45); } }
 .cia-logo { filter: drop-shadow(0 6px 24px rgba(0,163,224,.45)); }
 .cia-tel { aspect-ratio: 9 / 19.5; padding: 2.2%; border-radius: 14% / 6.5%; background: linear-gradient(145deg, #2b3a55, #0b1220 40%, #1c2940);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 40px 80px -30px rgba(0,0,0,.8), 0 0 60px -10px rgba(0,163,224,.35); transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+  box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 40px 80px -30px rgba(0,0,0,.8), 0 0 60px -10px rgba(0,163,224,.35); }
 .cia-tel-pantalla { position: relative; height: 100%; overflow: hidden; border-radius: 12% / 5.6%; background: #050c1f; }
 .cia-tel-barra { position: absolute; inset: 0 0 auto; height: 5.5%; display: flex; align-items: center; justify-content: space-between; padding: 0 9% ; font: 700 9px Inter, sans-serif; color: #fff; z-index: 2; }
 .cia-tel-iconos { width: 18px; height: 7px; border-radius: 2px; border: 1px solid rgba(255,255,255,.8); box-shadow: inset -6px 0 0 rgba(255,255,255,.8); }
