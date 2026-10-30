@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, lazy, Suspense } from "react";
 import { 
   Building2, Search, CheckCircle2, ChevronRight, ArrowLeft,
   MapPin, Phone, Mail, ExternalLink, Filter, Layers, Users, Calendar, Award
@@ -6,6 +6,13 @@ import {
 import { CECIP_AUTORIDADES } from "../data/autoridadesData";
 import { ALL_CECIP_SOCIOS } from "../data/sociosData";
 import { ErpSocio } from "../types";
+
+// rubro sin acentos ni mayúsculas mezcladas, para agrupar "Calzado y Vestimenta" con "CALZADO Y VESTIMENTA"
+const normalizarRubro = (r?: string) =>
+  (r || "Otros").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[,/]+/g, " ").replace(/\s+/g, " ").trim().toUpperCase();
+
+// el mapa (Leaflet) se carga solo al abrir Comercios Asociados
+const ComerciosMapa = lazy(() => import("./ComerciosMapa"));
 
 export interface SubPageViewProps {
   pageTitle: string;
@@ -46,6 +53,7 @@ export default function SubPageView({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRubro, setSelectedRubro] = useState<string>("Todos");
   const [selectedDetailSocio, setSelectedDetailSocio] = useState<ErpSocio | null>(null);
+  const [socioEnMapa, setSocioEnMapa] = useState<ErpSocio | null>(null);
 
   const isAutoridades = pageTitle.toLowerCase().includes("autoridad");
   const isComercios = pageTitle.toLowerCase().includes("comercio") && pageTitle.toLowerCase().includes("asociado");
@@ -55,7 +63,7 @@ export default function SubPageView({
   const rubrosList = useMemo(() => {
     const counts: Record<string, number> = {};
     ALL_CECIP_SOCIOS.forEach((s) => {
-      const r = s.rubro || "Otros";
+      const r = normalizarRubro(s.rubro);
       counts[r] = (counts[r] || 0) + 1;
     });
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
@@ -73,7 +81,7 @@ export default function SubPageView({
         s.direccion?.toLowerCase().includes(query) ||
         s.cuit?.toLowerCase().includes(query);
 
-      const matchesRubro = selectedRubro === "Todos" || s.rubro === selectedRubro;
+      const matchesRubro = selectedRubro === "Todos" || normalizarRubro(s.rubro) === selectedRubro;
       return matchesSearch && matchesRubro;
     });
   }, [searchTerm, selectedRubro]);
@@ -205,13 +213,20 @@ export default function SubPageView({
               )}
             </div>
 
+            {/* Mapa de Paraná con la ubicación de cada socio (sigue al buscador y a los rubros) */}
+            <div id="mapa-comercios" className="scroll-mt-28">
+              <Suspense fallback={<div className="h-[360px] sm:h-[460px] rounded-2xl bg-slate-100 animate-pulse" />}>
+                <ComerciosMapa socios={filteredSocios} onVerFicha={setSelectedDetailSocio} enfocado={socioEnMapa} />
+              </Suspense>
+            </div>
+
             {/* Search and Filters */}
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input 
                   type="text"
-                  placeholder="Buscar por nombre de fantasía, razón social, rubro, CUIT o calle..."
+                  placeholder="Buscar comercio por nombre, rubro, calle o CUIT..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00a3e0] transition-all"
@@ -225,6 +240,17 @@ export default function SubPageView({
                   </button>
                 )}
               </div>
+
+              <select
+                value={selectedRubro}
+                onChange={(e) => setSelectedRubro(e.target.value)}
+                aria-label="Filtrar por rubro"
+                className="w-full sm:w-auto px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00a3e0] cursor-pointer"
+              >
+                {rubrosList.map((r) => (
+                  <option key={r.name} value={r.name}>{r.name === "Todos" ? "Todos los rubros" : r.name} ({r.count})</option>
+                ))}
+              </select>
 
               {/* Rubros tags */}
               <div className="flex flex-wrap gap-2 pt-2">
@@ -349,6 +375,16 @@ export default function SubPageView({
                       className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer"
                     >
                       Cerrar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSocioEnMapa({ ...selectedDetailSocio });
+                        setSelectedDetailSocio(null);
+                        document.getElementById("mapa-comercios")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="px-4 py-2 bg-[#00a3e0] hover:bg-[#0c2356] text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <MapPin size={13} /> Ver en el mapa
                     </button>
                     {selectedDetailSocio.whatsapp && (
                       <a
