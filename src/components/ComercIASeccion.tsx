@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowRight, Bot, Camera, MapPin, MessageCircle, Pause, Play, Rocket, Search, Users, Volume2, VolumeX, Wrench, Zap } from "lucide-react";
+import { ArrowRight, Bot, Cctv, Flame, Hammer, MapPin, Megaphone, MessageCircle, Pause, Play, Search, Smartphone, Volume2, VolumeX, Wrench, Zap } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
 import { clamp, lerp, movimientoReducido, suave, tramo } from "../lib/animacion";
 
@@ -30,17 +30,19 @@ const CAPITULOS: { eyebrow: string; titulo: string; destacado?: string; texto: s
     texto: "Automatizá la atención por WhatsApp, el marketing y la administración. Y formá a tu equipo como Experto en IA para Pymes en el Instituto IEC.",
   },
   {
-    eyebrow: "Lo que se viene",
+    eyebrow: "IEC Services",
     titulo: "El comercio del futuro empieza en Paraná.",
-    texto: "Una sola adhesión te conecta con todo el ecosistema de transformación tecnológica.",
+    texto: "Y cuando tu comercio necesita una mano, pedís desde la app técnicos avalados por el Instituto IEC:",
   },
 ];
 
-const PROXIMOS = [
-  { icono: Camera, texto: "Streaming ComercIA Inteligente" },
-  { icono: Users, texto: "Simposios tecnológicos mensuales" },
-  { icono: Rocket, texto: "IEC Tech Experience" },
-  { icono: Zap, texto: "Sistemas smart y ahorro de energía" },
+const SERVICIOS = [
+  { icono: Zap, texto: "Electricistas" },
+  { icono: Cctv, texto: "Cámaras y alarmas" },
+  { icono: Hammer, texto: "Construcción en seco" },
+  { icono: Flame, texto: "Gasistas" },
+  { icono: Smartphone, texto: "Reparación de celulares" },
+  { icono: Megaphone, texto: "Marketing digital" },
 ];
 
 // Capturas de la web app (ancho 480 px; alto / ancho = proporción). Las largas se recorren como si se hiciera scroll.
@@ -233,7 +235,7 @@ function ComercIAVideo() {
 
         <div className="relative z-10 mx-auto grid h-full max-w-[1440px] grid-rows-[auto_1fr] items-center gap-2 px-5 pt-20 sm:px-8 lg:grid-cols-12 lg:grid-rows-1 lg:gap-8 lg:px-12 lg:pt-0">
           {/* Textos por capítulo */}
-          <div className="relative z-20 min-h-[17.5rem] sm:min-h-[20rem] lg:col-span-5 lg:min-h-[32rem]">
+          <div className="relative z-20 min-h-[17.5rem] sm:min-h-[20rem] lg:col-span-5 lg:min-h-[36rem]">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <img src={`${IMG}/logo-comercia.webp`} alt="ComercIA Inteligente Paraná" className="cia-logo h-14 w-auto sm:h-20" />
               <Firma />
@@ -248,21 +250,21 @@ function ComercIAVideo() {
                   <div className={`font-display text-sm font-semibold ${oscuro ? "text-sky-300" : "text-[#00a3e0]"}`}>
                     0{i + 1} <span className="mx-1 opacity-50">—</span> {c.eyebrow}
                   </div>
-                  <h2 className={`font-display mt-2 text-[1.9rem] font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl ${oscuro ? "text-white" : "text-[#0c2356]"}`}>
+                  <h2 className={`font-display mt-2 font-bold leading-[1.05] tracking-tight ${i === n - 1 ? "text-[1.7rem] sm:text-4xl lg:text-5xl" : "text-[1.9rem] sm:text-5xl lg:text-6xl"} ${oscuro ? "text-white" : "text-[#0c2356]"}`}>
                     {c.titulo}
                     {c.destacado && <span className="cia-destacado mt-1 block text-[#00a3e0]">{c.destacado}</span>}
                   </h2>
                   <p className={`mt-4 max-w-md text-sm leading-relaxed sm:text-base ${oscuro ? "text-slate-300" : "text-slate-600"}`}>{c.texto}</p>
                   {i === n - 1 && (
                     <>
-                      <ul className="mt-5 grid max-w-md grid-cols-2 gap-2">
-                        {PROXIMOS.map(({ icono: Icono, texto }, k) => (
-                          <li key={texto} className="cia-chip" style={{ transitionDelay: `${k * 70}ms`, opacity: tramo(p, 0.78 + k * 0.025, 0.84 + k * 0.025), transform: `translateY(${(1 - tramo(p, 0.78 + k * 0.025, 0.84 + k * 0.025)) * 14}px)` }}>
+                      <ul className="mt-4 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                        {SERVICIOS.map(({ icono: Icono, texto }, k) => (
+                          <li key={texto} className="cia-chip" style={{ transitionDelay: `${k * 70}ms`, opacity: tramo(p, 0.78 + k * 0.02, 0.84 + k * 0.02), transform: `translateY(${(1 - tramo(p, 0.78 + k * 0.02, 0.84 + k * 0.02)) * 14}px)` }}>
                             <Icono size={14} className="shrink-0 text-[#00a3e0]" /> <span>{texto}</span>
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-6 flex flex-wrap gap-3">
+                      <div className="mt-5 flex flex-wrap gap-2.5">
                         <a href={URL_ADHESION} target="_blank" rel="noopener noreferrer" className="cia-cta">Quiero sumarme <ArrowRight size={16} /></a>
                         <a href={`${ERP_URL}/portal/comercia`} target="_blank" rel="noopener noreferrer" className="cia-cta-sec">Soy socio del CeCIP</a>
                       </div>
@@ -482,18 +484,18 @@ const CSS = `
 .cia-etiqueta-sec { padding: .3rem .7rem; border-radius: 999px; font-size: 11px; font-weight: 600; color: #e0f2fe;
   background: rgba(7,23,56,.6); border: 1px solid rgba(125,211,252,.3); backdrop-filter: blur(10px); animation: cia-vaiven 3.6s ease-in-out infinite; }
 @keyframes cia-vaiven { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
-@media (max-width: 640px) { .cia-etiqueta { font-size: 11px; } }
+@media (max-width: 640px) { .cia-etiqueta { font-size: 11px; } .cia-chip { white-space: normal; line-height: 1.15; } }
 .cia-escuchar { animation: cia-pulso 2s ease-out infinite; }
 @keyframes cia-pulso { 0% { box-shadow: 0 0 0 0 rgba(0,163,224,.55); } 100% { box-shadow: 0 0 0 12px rgba(0,163,224,0); } }
 @media (max-width: 640px) { .cia-cliente { font-size: 10.5px; padding: .35rem .6rem; } }
 .cia-flota { animation: cia-flota 6s ease-in-out infinite; }
 @keyframes cia-flota { 0%, 100% { translate: 0 -6px; } 50% { translate: 0 8px; } }
-.cia-chip { display: flex; align-items: center; gap: .45rem; border-radius: .75rem; padding: .5rem .7rem; font-size: .75rem; font-weight: 600;
+.cia-chip { display: flex; align-items: center; gap: .45rem; white-space: nowrap; border-radius: .75rem; padding: .45rem .65rem; font-size: .74rem; font-weight: 600;
   color: #e0f2fe; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); transition: opacity .3s, transform .3s; }
-.cia-cta { display: inline-flex; align-items: center; gap: .5rem; border-radius: .75rem; padding: .8rem 1.3rem; font-size: .875rem; font-weight: 700;
+.cia-cta { display: inline-flex; align-items: center; gap: .5rem; border-radius: .75rem; padding: .7rem 1.1rem; font-size: .84rem; font-weight: 700;
   color: #fff; background: #00a3e0; box-shadow: 0 10px 30px -10px rgba(0,163,224,.8); transition: transform .2s, background .2s; }
 .cia-cta:hover { background: #0284c7; transform: translateY(-2px); }
-.cia-cta-sec { display: inline-flex; align-items: center; border-radius: .75rem; padding: .8rem 1.2rem; font-size: .875rem; font-weight: 600;
+.cia-cta-sec { display: inline-flex; align-items: center; border-radius: .75rem; padding: .7rem 1rem; font-size: .84rem; font-weight: 600;
   color: #e0f2fe; border: 1px solid rgba(255,255,255,.25); transition: background .2s; }
 .cia-cta-sec:hover { background: rgba(255,255,255,.08); }
 `;
