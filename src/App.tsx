@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import { CVSubmission, WebNewsItem, ContactMessage } from "./types";
 import ResumePortal from "./components/ResumePortal";
-import { contenidoWeb, ERP_URL, type EventoErp, type NovedadErp } from "./lib/erp";
+import BannerBolsaEmpleo from "./components/BannerBolsaEmpleo";
+import { contenidoWeb, ERP_URL, type EventoErp, type GrupoErp, type NoticiaErp, type NovedadErp } from "./lib/erp";
 import SociosPortal from "./components/SociosPortal";
 import PrivateAdminPortal from "./components/PrivateAdminPortal";
 import ErpPortal from "./components/erp/ErpPortal";
@@ -159,6 +160,19 @@ const contentData: Record<string, ContentDetail> = {
       "Estrategias de promoción del turismo corporativo y recreativo.",
       "Convenios con centros universitarios locales para pasantías profesionales.",
       "Consultas y redes sobre metodologías ágiles de gestión."
+    ]
+  },
+  "mujeres empresarias": {
+    title: "Mujeres Empresarias",
+    categoryName: "Cámaras Sectoriales",
+    badge: "Mujeres CeCIP",
+    description: "Es el espacio del CeCIP que reúne a empresarias, emprendedoras y profesionales de Paraná para potenciar el liderazgo femenino en el comercio, la industria y los servicios.",
+    additionalInfo: "Organizamos encuentros, capacitaciones y actividades de networking para que más mujeres lideren, hagan crecer sus empresas y participen en la vida institucional del Centro Comercial.",
+    itemsList: [
+      "Encuentros y networking entre empresarias de la ciudad.",
+      "Capacitaciones en gestión, finanzas, ventas y herramientas digitales.",
+      "Charlas con referentes y experiencias de liderazgo.",
+      "Participación en la Comisión de Mujeres y Diversidad Empresaria."
     ]
   },
   "jóvenes empresarios": {
@@ -458,6 +472,22 @@ function eventoDesdeErp(e: EventoErp) {
   };
 }
 
+/** Noticia cargada en ERP → Comunicación → Noticias de la web */
+function noticiaDesdeErp(n: NoticiaErp): WebNewsItem {
+  const cuerpo = (n.cuerpo || "").trim();
+  return {
+    id: `erp-n-${n.id}`,
+    title: n.titulo,
+    date: new Date(n.fecha).toLocaleDateString("es-AR"),
+    category: n.categoria || "Institucional",
+    badge: n.destacado ? "Destacado" : n.categoria || "CeCIP Paraná",
+    description: (n.bajada || "").trim() || (cuerpo.length > 320 ? `${cuerpo.slice(0, cuerpo.lastIndexOf(" ", 320))}…` : cuerpo),
+    additionalInfo: n.bajada ? cuerpo : cuerpo.length > 320 ? cuerpo.slice(cuerpo.lastIndexOf(" ", 320)).trim() : "",
+    imageUrl: n.imagen_url || BANNER_DEFECTO,
+    publicada: true,
+  };
+}
+
 function novedadDesdeErp(n: NovedadErp): WebNewsItem {
   const cuerpo = (n.cuerpo || "").trim();
   const corte = cuerpo.length > 320 ? cuerpo.lastIndexOf(" ", 320) : -1;
@@ -591,6 +621,7 @@ export default function App() {
 
   // Dynamic news state
   const [news, setNews] = useState<WebNewsItem[]>([]);
+  const [gruposErp, setGruposErp] = useState<GrupoErp[]>([]);
 
   // Form submission states
   const [formData, setFormData] = useState({
@@ -673,15 +704,18 @@ export default function App() {
 
     // Eventos, capacitaciones y comunicados publicados en el ERP del CeCIP
     contenidoWeb()
-      .then(({ eventos, novedades }) => {
+      .then(({ eventos, novedades, noticias, grupos }) => {
+        setGruposErp(grupos);
         const evs = eventos.map(eventoDesdeErp);
         setEventsList(evs);
         if (evs.length) {
           setSelectedWebEventId(evs[0].id);
           setMesCal({ y: evs[0].year, m: evs[0].monthIndex });
         }
-        if (novedades.length) {
-          const deErp = novedades.map(novedadDesdeErp);
+        if (novedades.length || noticias.length) {
+          // primero las noticias destacadas, después el resto por fecha (las del ERP antes que las de ejemplo)
+          const orden = [...noticias].sort((a, b) => Number(b.destacado) - Number(a.destacado) || +new Date(b.fecha) - +new Date(a.fecha));
+          const deErp = [...orden.map(noticiaDesdeErp), ...novedades.map(novedadDesdeErp)];
           setNews((prev) => [...deErp, ...prev.filter((x) => !String(x.id).startsWith("erp-"))]);
         }
       })
@@ -734,6 +768,11 @@ export default function App() {
         } else {
           setShowAdminPortal(true);
         }
+      }
+
+      if (hash === "#bolsa-de-empleo" || hash === "#bolsa" || pathname.includes("/bolsa-de-empleo")) {
+        setActiveSubPage({ title: "Bolsa de Empleo", categoryName: "Servicios", badge: "Bolsa de Empleo CeCIP" });
+        setCurrentView("subpage");
       }
 
       // Comercios tab accessible directly via URL
@@ -857,6 +896,12 @@ export default function App() {
       return;
     }
 
+    if (key.includes("bolsa de empleo") || key === "bolsa" || key.includes("currículum") || key.includes("curriculum") || key === "cv") {
+      setActiveSubPage({ title: "Bolsa de Empleo", categoryName: "Servicios", badge: "Bolsa de Empleo CeCIP" });
+      setCurrentView("subpage");
+      return;
+    }
+
     if ((key.includes("comercio") && key.includes("asociado")) || key.includes("padrón") || key.includes("padron")) {
       setActiveSubPage({
         title: "Comercios Asociados",
@@ -926,7 +971,7 @@ export default function App() {
   // Dropdown options
   const dropdownMenus: { [key: string]: string[] } = {
     institucional: ["Quiénes Somos", "Autoridades", "Estatuto", "Historia", "Comisiones", "Comercios Asociados"],
-    camaras: ["Cámara de Comercio", "Cámara de Industria", "Cámara de Servicios", "Jóvenes Empresarios"],
+    camaras: ["Cámara de Comercio", "Cámara de Industria", "Cámara de Servicios", "Jóvenes Empresarios", "Mujeres Empresarias"],
     entidades: ["CAME", "CAC", "Federación Económica de Entre Ríos", "Bolsa de Comercio"]
   };
 
@@ -950,6 +995,15 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => navigateToPage("Bolsa de Empleo")}
+              className="text-xs font-semibold text-white bg-[#00a3e0] hover:bg-[#0c2356] rounded-lg px-2.5 py-1 transition-all flex items-center gap-1.5 cursor-pointer select-none"
+              title="Subí tu CV a la Bolsa de Empleo del CeCIP"
+            >
+              <Briefcase size={12} /> Bolsa de Empleo
+            </button>
+
             {/* Login de socios: lleva al Portal de Socios del ERP */}
             <a
               href={`${ERP_URL}/portal`}
@@ -1411,6 +1465,9 @@ export default function App() {
         </div>
       </section>
 
+      {/* Banner comercial de la Bolsa de Empleo (lleva directo a subir el CV) */}
+      <BannerBolsaEmpleo empresas={ALL_CECIP_SOCIOS.length} onSubirCv={() => { try { sessionStorage.setItem("cecip-ir-a-cv", "1"); } catch { /* sin storage */ } window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); navigateToPage("Bolsa de Empleo"); }} />
+
       {/* 4. BENEFICIOS SECTION */}
       <section id="beneficios-section" className="py-20 px-3 sm:px-6 lg:px-8 bg-white border-t border-slate-50">
         <div className="max-w-[1440px] w-full mx-auto text-center">
@@ -1688,6 +1745,8 @@ export default function App() {
       additionalInfo={activeSubPage?.additionalInfo}
       itemsList={activeSubPage?.itemsList}
       newsItem={activeSubPage?.newsItem}
+      gruposErp={gruposErp}
+      totalSocios={ALL_CECIP_SOCIOS.length}
       onBackToHome={() => navigateToHome()}
       onOpenAsociateModal={() => navigateToHome("asociarse-section")}
     />

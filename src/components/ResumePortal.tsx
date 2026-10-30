@@ -181,7 +181,7 @@ export default function ResumePortal({ onCVSubmitted }: ResumePortalProps) {
             Envíanos tu Currículum Vitae
           </h3>
           <p className="text-slate-500 text-xs sm:text-sm max-w-lg mx-auto">
-            Forma parte de la base de talentos oficial de Paraná. Tu perfil estará disponible para que las más de 500 empresas socias del CeCIP puedan consultarlo para búsquedas activas.
+            Forma parte de la base de talentos oficial de Paraná. Tu perfil estará disponible para que las más de 200 empresas socias del CeCIP puedan consultarlo para búsquedas activas.
           </p>
         </div>
 

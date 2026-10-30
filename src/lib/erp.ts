@@ -1,6 +1,6 @@
 /**
- * Conexión con el ERP del CeCIP (cecip-erp): la web toma de ahí los eventos, capacitaciones y
- * novedades publicados, y manda los CV de la Bolsa de Empleo.
+ * Conexión con el ERP del CeCIP (cecip-erp): la web toma de ahí los eventos, capacitaciones, novedades,
+ * noticias y publicaciones de Mujeres y Jóvenes Empresarios, y manda los CV de la Bolsa de Empleo.
  *
  * Usa la clave PÚBLICA (anon) de Supabase del ERP, la misma que ya viaja en el ERP: con ella la web
  * solo puede llamar a web_contenido() y web_postular_cv() y subir archivos a "bolsa-cvs/web/".
@@ -27,12 +27,19 @@ export interface EventoErp {
   slug_inscripcion: string | null; inscripcion_abierta: boolean;
 }
 export interface NovedadErp { id: string; titulo: string; cuerpo: string; imagen_url: string | null; fecha: string; destacado: boolean }
+/** Noticia cargada en ERP → Comunicación → Noticias de la web */
+export interface NoticiaErp extends NovedadErp { bajada: string | null; categoria: string }
+/** Evento, actividad o capacitación de Mujeres Empresarias o Jóvenes Empresarios */
+export interface GrupoErp {
+  id: string; grupo: "mujeres" | "jovenes"; tipo: "evento" | "actividad" | "capacitacion" | "novedad"; titulo: string; descripcion: string | null;
+  fecha: string | null; fecha_fin: string | null; lugar: string | null; imagen_url: string | null; link: string | null;
+}
 
-/** Eventos, capacitaciones y novedades publicados en el ERP para la web. */
-export async function contenidoWeb(): Promise<{ eventos: EventoErp[]; novedades: NovedadErp[] }> {
+/** Eventos, capacitaciones, novedades, noticias y publicaciones de Mujeres y Jóvenes publicados en el ERP para la web. */
+export async function contenidoWeb(): Promise<{ eventos: EventoErp[]; novedades: NovedadErp[]; noticias: NoticiaErp[]; grupos: GrupoErp[] }> {
   const { data, error } = await erp().rpc("web_contenido");
   if (error) throw new Error(error.message);
-  return { eventos: data?.eventos || [], novedades: data?.novedades || [] };
+  return { eventos: data?.eventos || [], novedades: data?.novedades || [], noticias: data?.noticias || [], grupos: data?.grupos || [] };
 }
 
 const nombreSeguro = (n: string) => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w.-]+/g, "_").slice(-80) || "cv.pdf";

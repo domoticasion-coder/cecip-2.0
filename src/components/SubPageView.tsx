@@ -6,6 +6,9 @@ import {
 import { CECIP_AUTORIDADES } from "../data/autoridadesData";
 import { ALL_CECIP_SOCIOS } from "../data/sociosData";
 import { ErpSocio } from "../types";
+import type { GrupoErp } from "../lib/erp";
+import BolsaEmpleoPagina from "./BolsaEmpleoPagina";
+import ActividadesGrupo from "./ActividadesGrupo";
 
 // rubro sin acentos ni mayúsculas mezcladas, para agrupar "Calzado y Vestimenta" con "CALZADO Y VESTIMENTA"
 const normalizarRubro = (r?: string) =>
@@ -35,6 +38,9 @@ export interface SubPageViewProps {
   onBackToHome: () => void;
   onSelectSocio?: (socio: ErpSocio) => void;
   onOpenAsociateModal?: () => void;
+  /** Eventos, actividades y capacitaciones de Mujeres y Jóvenes Empresarios (del ERP) */
+  gruposErp?: GrupoErp[];
+  totalSocios?: number;
 }
 
 export default function SubPageView({
@@ -47,7 +53,9 @@ export default function SubPageView({
   newsItem,
   onBackToHome,
   onSelectSocio,
-  onOpenAsociateModal
+  onOpenAsociateModal,
+  gruposErp = [],
+  totalSocios = 200
 }: SubPageViewProps) {
   // State for Comercios directory when viewed as a tab
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,6 +66,9 @@ export default function SubPageView({
   const isAutoridades = pageTitle.toLowerCase().includes("autoridad");
   const isComercios = pageTitle.toLowerCase().includes("comercio") && pageTitle.toLowerCase().includes("asociado");
   const isNews = !!newsItem;
+  const isBolsa = pageTitle.toLowerCase().includes("bolsa de empleo");
+  const tituloMin = pageTitle.toLowerCase();
+  const grupo: "mujeres" | "jovenes" | null = tituloMin.includes("mujeres empresarias") ? "mujeres" : tituloMin.includes("jóvenes empresarios") ? "jovenes" : null;
 
   // Rubros calculation for Comercios Asociados
   const rubrosList = useMemo(() => {
@@ -484,7 +495,10 @@ export default function SubPageView({
         )}
 
         {/* --- CASE D: INSTITUTIONAL / CAMARAS / ENTIDADES / BENEFICIOS DETAILS --- */}
-        {!isAutoridades && !isComercios && !isNews && (
+        {/* --- BOLSA DE EMPLEO --- */}
+        {isBolsa && <BolsaEmpleoPagina empresas={totalSocios} onAsociarse={onOpenAsociateModal} />}
+
+        {!isAutoridades && !isComercios && !isNews && !isBolsa && (
           <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-10">
             
             <div className="space-y-4">
@@ -514,6 +528,9 @@ export default function SubPageView({
                 </div>
               )}
             </div>
+
+            {/* Eventos, actividades y capacitaciones del espacio (Mujeres / Jóvenes Empresarios) */}
+            {grupo && <ActividadesGrupo grupo={grupo} items={gruposErp.filter((g) => g.grupo === grupo)} />}
 
             {/* Items List */}
             {itemsList && itemsList.length > 0 && (
