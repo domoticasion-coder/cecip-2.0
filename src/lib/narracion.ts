@@ -26,8 +26,10 @@ function alPrimerGesto(fn: () => void) {
   GESTOS.forEach((g) => window.addEventListener(g, disparar, { capture: true, passive: true }));
 }
 
-export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09 }: {
+export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }: {
   clip: (k: number) => string; musica: string; alta?: number; baja?: number;
+  /** segundo desde el que retomar la voz si el navegador la había bloqueado (narración continua) */
+  posicion?: () => number;
 }) {
   const [voz, setVoz] = useState(true);
   const vozRef = useRef(true);
@@ -55,7 +57,7 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09 }: {
     setBloqueado(true);
     alPrimerGesto(() => {
       setBloqueado(false);
-      if (vozRef.current && activo.current) { sonarMusica(); hablar(ultimo.current); }
+      if (vozRef.current && activo.current) { sonarMusica(); hablar(ultimo.current, posicion?.() ?? 0); }
     });
   };
 
@@ -73,7 +75,7 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09 }: {
   };
   const callar = () => audios.current.forEach((a, k) => { a.pause(); sonando.current[k] = false; });
   const apagar = () => { callar(); clearInterval(fundido.current); fondo.current?.pause(); };
-  const hablar = (k: number) => {
+  const hablar = (k: number, desde = 0) => {
     ultimo.current = k;
     if (!vozRef.current) return;
     callar();
@@ -87,7 +89,7 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09 }: {
       audios.current[k] = a;
     }
     const a = audios.current[k];
-    a.currentTime = 0;
+    a.currentTime = desde;
     sonando.current[k] = true;
     a.play().catch((e: DOMException) => {
       sonando.current[k] = false;
@@ -98,17 +100,17 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09 }: {
   /** Avisa si la sección está a la vista y reproduciéndose (para arrancar o cortar el sonido) */
   const setActivo = (v: boolean) => { activo.current = v; if (v) sonarMusica(); else apagar(); };
 
-  const alternar = (k: number) => {
+  const alternar = (k: number, desde = 0) => {
     const nueva = !vozRef.current;
     vozRef.current = nueva;
     setVoz(nueva);
     if (!nueva) return apagar();
     setBloqueado(false);
     sonarMusica();
-    hablar(k);
+    hablar(k, desde);
   };
 
   useEffect(() => () => apagar(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { voz, vozRef, bloqueado, sonando, hablar, apagar, setActivo, alternar };
+  return { voz, vozRef, bloqueado, sonando, hablar, apagar, setActivo, alternar, audioDe: (k: number) => audios.current[k] as HTMLAudioElement | undefined };
 }

@@ -11,7 +11,9 @@ import { useNarracion } from "../lib/narracion";
  * Un "video" que viaja de 1898 a hoy: cada época tiene su escena (tren y teléfono, radio y la sede de
  * 1930, televisión y la fusión de 1952, internet, e IA) y termina en un celular con el Portal funcionando.
  * Las épocas duran cada vez menos: la tecnología se acelera. Se pausa fuera de pantalla.
- * Tiene voz y música (ElevenLabs, en /public/audio/portal-*.mp3): cada época espera a que termine su frase.
+ * Tiene voz y música (ElevenLabs): la narración es UNA sola toma (portal-narracion.mp3) y cada época
+ * cambia en el segundo exacto en que la voz llega a ella (MARCAS, sacadas de los tiempos de ElevenLabs).
+ * Cierra con un gancho para que los socios se registren.
  * Fuentes de los hitos del CeCIP: Municipalidad de Paraná (Ciudad y Memoria) y El Diario de Paraná (14/04/2024).
  */
 
@@ -20,13 +22,21 @@ const HOY = new Date().getFullYear();
 const ANIOS = HOY - FUNDACION;
 const PORTAL = `${ERP_URL}/portal`;
 
+// Segundo de la narración en que empieza cada época (y su duración total, con un respiro al final)
+const MARCAS = [0, 10.21, 17.52, 26.84, 32.14, 47.43];
+const FIN_NARRACION = 57.92;
+const DUR_TOTAL = (FIN_NARRACION + 3.5) * 1000;
+const durDe = (i: number) => ((MARCAS[i + 1] ?? DUR_TOTAL / 1000) - MARCAS[i]) * 1000;
+
 const ERAS = [
-  { anio: FUNDACION, ritmo: "Cambios cada 100 años", tec: "Ferrocarril, telégrafo y teléfono", cecip: "26 de agosto: un centenar de comerciantes funda el Centro Comercial de Paraná", dur: 4200, fondo: ["#3a2614", "#140c06"], acento: "#f59e0b" },
-  { anio: 1930, ritmo: "Cambios cada década", tec: "La radio llega a los hogares (primera transmisión en el país: 1920)", cecip: "15 de septiembre: inaugura su sede propia frente a la plaza 1° de Mayo", dur: 3600, fondo: ["#3b2f12", "#121008"], acento: "#fbbf24" },
-  { anio: 1952, ritmo: "Cambios cada año", tec: "La televisión: Canal 7 sale al aire en 1951", cecip: "Se fusiona con la Asociación Industrial de Paraná: nace el CeCIP", dur: 3200, fondo: ["#0f3b3a", "#06141a"], acento: "#2dd4bf" },
-  { anio: 2000, ritmo: "Cambios cada mes", tec: "Internet, celulares y redes", cecip: "El comercio de Paraná entra en la era digital", dur: 2700, fondo: ["#0b2d63", "#050f26"], acento: "#38bdf8" },
-  { anio: HOY, ritmo: "Cambios en tiempo real", tec: "Inteligencia artificial", cecip: "Lanza el Portal de Socios y ComercIA con IA", dur: 9000, fondo: ["#2a0f5e", "#0a0626"], acento: "#a78bfa" },
-];
+  { anio: FUNDACION, ritmo: "Cambios cada 100 años", tec: "Ferrocarril, telégrafo y teléfono", cecip: "26 de agosto: un centenar de comerciantes funda el Centro Comercial de Paraná", dur: durDe(0), fondo: ["#3a2614", "#140c06"], acento: "#f59e0b" },
+  { anio: 1930, ritmo: "Cambios cada década", tec: "La radio llega a los hogares (primera transmisión en el país: 1920)", cecip: "15 de septiembre: inaugura su sede propia frente a la plaza 1° de Mayo", dur: durDe(1), fondo: ["#3b2f12", "#121008"], acento: "#fbbf24" },
+  { anio: 1952, ritmo: "Cambios cada año", tec: "La televisión: Canal 7 sale al aire en 1951", cecip: "Se fusiona con la Asociación Industrial de Paraná: nace el CeCIP", dur: durDe(2), fondo: ["#0f3b3a", "#06141a"], acento: "#2dd4bf" },
+  { anio: 2000, ritmo: "Cambios cada mes", tec: "Internet, celulares y redes", cecip: "El comercio de Paraná entra en la era digital", dur: durDe(3), fondo: ["#0b2d63", "#050f26"], acento: "#38bdf8" },
+  { anio: HOY, ritmo: "Cambios en tiempo real", tec: "Inteligencia artificial", cecip: "Lanza el Portal de Socios y ComercIA con IA", dur: durDe(4), fondo: ["#2a0f5e", "#0a0626"], acento: "#a78bfa" },
+  // gancho final: invita a registrarse
+  { anio: HOY, titulo: "¿Y vos?", ritmo: "Tu turno", tec: "Registrate en 2 minutos con el CUIT de tu empresa", cecip: "Sumate al Portal de Socios y sé parte de los próximos 128 años", dur: durDe(5), fondo: ["#063b5c", "#04121f"], acento: "#22d3ee" },
+] as { anio: number; titulo?: string; ritmo: string; tec: string; cecip: string; dur: number; fondo: string[]; acento: string }[];
 const INICIOS = ERAS.reduce<number[]>((a, e, i) => [...a, i ? a[i - 1] + ERAS[i - 1].dur : 0], []);
 const TOTAL = INICIOS[INICIOS.length - 1] + ERAS[ERAS.length - 1].dur;
 
@@ -60,23 +70,22 @@ export default function BannerPortalSocios() {
   }, []);
 
   // voz y música: arrancan solas al ver la sección (ver lib/narracion)
-  const sonido = useNarracion({ clip: (i) => `/audio/portal-${i + 1}.mp3`, musica: "/audio/portal-musica.mp3", alta: 0.28, baja: 0.08 });
+  const sonido = useNarracion({ clip: () => "/audio/portal-narracion.mp3", musica: "/audio/portal-musica.mp3", alta: 0.28, baja: 0.1, posicion: () => tRef.current / 1000 });
 
   useEffect(() => {
     sonido.setActivo(visible && !pausa);
     if (!visible || pausa) return;
-    sonido.hablar(eraDe(tRef.current));
+    if (tRef.current < FIN_NARRACION * 1000) sonido.hablar(0, tRef.current / 1000);
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
-      const v = tRef.current;
-      let nv = (v + Math.min(ahora - antes, 1000)) % TOTAL;
+      const dt = Math.min(ahora - antes, 1000);
       antes = ahora;
-      const i = eraDe(v);
-      const fin = INICIOS[i] + ERAS[i].dur - 1;
-      // cada época espera a que termine su frase
-      if (sonido.vozRef.current && sonido.sonando.current[i] && v <= fin && (nv > fin || nv < v)) nv = fin;
-      const i2 = eraDe(nv);
-      if (i2 !== i || nv < v) sonido.hablar(i2);
+      const voz = sonido.audioDe(0);
+      // con la voz sonando, el video sigue a la narración (así cada época cambia justo cuando la nombra)
+      let nv = sonido.vozRef.current && sonido.sonando.current[0] && voz && !voz.paused && voz.currentTime > 0
+        ? voz.currentTime * 1000
+        : tRef.current + dt;
+      if (nv >= TOTAL) { nv = 0; sonido.hablar(0, 0); }
       tRef.current = nv;
       setT(nv);
       raf = requestAnimationFrame(paso);
@@ -86,7 +95,7 @@ export default function BannerPortalSocios() {
   }, [visible, pausa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // al saltar con los puntos el año ya aparece completo (sin la cuenta)
-  const irA = (k: number) => { tRef.current = INICIOS[k] + 900; setT(INICIOS[k] + 900); setPausa(false); sonido.hablar(k); };
+  const irA = (k: number) => { tRef.current = INICIOS[k] + 900; setT(INICIOS[k] + 900); setPausa(false); sonido.hablar(0, (INICIOS[k] + 900) / 1000); };
   const k = eraDe(t);
   const era = ERAS[k];
   const local = t - INICIOS[k];
@@ -109,7 +118,7 @@ export default function BannerPortalSocios() {
               <Sparkles size={13} style={{ color: era.acento }} /> Nuevo · Portal de Socios
             </span>
             <div className="mt-5 flex items-end gap-4">
-              <div className="ps-anio font-display tabular-nums" style={{ backgroundImage: `linear-gradient(180deg,#fff 20%, ${era.acento})` }}>{anio}</div>
+              <div key={era.titulo ? "titulo" : "anio"} className={`ps-anio font-display tabular-nums ${era.titulo ? "ps-pregunta" : ""}`} style={{ backgroundImage: `linear-gradient(180deg,#fff 20%, ${era.acento})` }}>{era.titulo || anio}</div>
             </div>
             <div key={`r${k}`} className="ps-entra">
               <div className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider" style={{ background: `${era.acento}26`, color: era.acento }}>
@@ -117,10 +126,10 @@ export default function BannerPortalSocios() {
               </div>
               <p className="mt-3 text-lg text-slate-300">{era.tec}</p>
               <p className="font-display mt-1 text-2xl font-bold leading-snug sm:text-3xl">
-                <span className="mr-2 text-sm font-bold uppercase tracking-widest" style={{ color: era.acento }}>CeCIP</span>{era.cecip}
+                {!era.titulo && <span className="mr-2 text-sm font-bold uppercase tracking-widest" style={{ color: era.acento }}>CeCIP</span>}{era.cecip}
               </p>
             </div>
-            <div className={`mt-8 transition-all duration-700 ${k === ERAS.length - 1 ? "opacity-100" : "opacity-80"}`}>
+            <div className={`mt-8 transition-all duration-700 ${k === ERAS.length - 1 ? "ps-final opacity-100" : "opacity-80"}`}>
               <p className="max-w-md text-sm text-slate-300">
                 {ANIOS} años acompañando cada salto. Ahora toda tu gestión con el CeCIP en un solo lugar, desde el celular o la computadora.
               </p>
@@ -142,6 +151,7 @@ export default function BannerPortalSocios() {
             {k === 2 && <Escena1952 key={`e${k}`} />}
             {k === 3 && <Escena2000 key={`e${k}`} />}
             {k === 4 && <EscenaHoy key={`e${k}`} local={local} />}
+            {k === 5 && <EscenaSumate key={`e${k}`} local={local} />}
           </div>
         </div>
 
@@ -164,9 +174,9 @@ export default function BannerPortalSocios() {
                 const x = (INICIOS[i] / TOTAL) * 100;
                 const activo = i <= k;
                 return (
-                  <button key={e.anio} type="button" onClick={() => irA(i)} className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer" style={{ left: `${x}%` }} aria-label={`Ir a ${e.anio}`}>
+                  <button key={e.anio} type="button" onClick={() => irA(i)} className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer" style={{ left: `${x}%` }} aria-label={`Ir a ${i === ERAS.length - 1 ? "Sumate" : e.anio}`}>
                     <span className={`block h-3.5 w-3.5 rounded-full border-2 transition ${activo ? "border-white" : "border-white/40 bg-transparent"}`} style={activo ? { background: e.acento, boxShadow: `0 0 12px ${e.acento}` } : undefined} />
-                    <span className={`absolute left-1/2 top-5 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold ${i === k ? "text-white" : "text-white/45 group-hover:text-white/80"}`}>{i === ERAS.length - 1 ? "Hoy" : e.anio}</span>
+                    <span className={`absolute left-1/2 top-5 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold ${i === k ? "text-white" : "text-white/45 group-hover:text-white/80"}`}>{i === ERAS.length - 1 ? "Sumate" : i === ERAS.length - 2 ? "Hoy" : e.anio}</span>
                   </button>
                 );
               })}
@@ -345,6 +355,54 @@ function EscenaHoy({ local }: { local: number }) {
   );
 }
 
+/** Gancho final: alguien se registra en el Portal con el CUIT de su empresa */
+function EscenaSumate({ local }: { local: number }) {
+  const escribir = (texto: string, desde: number, ms = 55) => texto.slice(0, Math.max(0, Math.floor((local - desde) / ms)));
+  const empresa = escribir("Tu Empresa S.A.", 900);
+  const cuit = escribir("30-12345678-9", 2000, 70);
+  const toca = local > 3400;
+  const listo = local > 4100;
+  return (
+    <Marco className="ps-sumate">
+      {listo && Array.from({ length: 18 }, (_, i) => (
+        <span key={i} className="ps-confeti" style={{ left: `${(i * 53) % 100}%`, background: ["#22d3ee", "#a78bfa", "#f59e0b", "#34d399"][i % 4], animationDelay: `${(i % 6) * 0.12}s` }} />
+      ))}
+      <div className="ps-celu absolute left-1/2 top-[5%] h-[90%] -translate-x-1/2" style={{ aspectRatio: "9 / 18" }}>
+        <div className="flex h-full flex-col overflow-hidden rounded-[1.8rem] border-[3px] border-white/70 bg-white text-slate-800 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8),0_0_50px_rgba(34,211,238,.45)]">
+          <div className="mx-auto mt-1.5 h-3 w-1/3 rounded-full bg-black" />
+          <div className="bg-gradient-to-r from-[#0c2356] to-[#0891b2] px-3 py-2 text-white">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-cyan-200">Portal de Socios</div>
+            <div className="text-[11px] font-bold">Crear mi cuenta</div>
+          </div>
+          {!listo ? (
+            <div className="flex flex-1 flex-col gap-2 p-3 text-[9px]">
+              <label className="font-semibold text-slate-500">Razón social</label>
+              <div className="h-6 rounded-md border border-slate-300 px-2 leading-6 text-[10px]">{empresa}<span className={empresa.length < 15 && local > 900 ? "ps-cursor" : "hidden"}>|</span></div>
+              <label className="font-semibold text-slate-500">CUIT de la empresa</label>
+              <div className="h-6 rounded-md border border-slate-300 px-2 leading-6 text-[10px] tabular-nums">{cuit}<span className={local > 2000 && cuit.length < 13 ? "ps-cursor" : "hidden"}>|</span></div>
+              <div className={`mt-auto rounded-md py-1.5 text-center text-[10px] font-bold text-white transition ${toca ? "scale-95 bg-[#0c2356]" : "bg-[#0891b2]"}`}>Crear cuenta</div>
+            </div>
+          ) : (
+            <div className="ps-bienvenida flex flex-1 flex-col items-center justify-center gap-2 p-3 text-center">
+              <CheckCircle2 size={38} className="text-emerald-500" />
+              <div className="text-[13px] font-bold text-[#0c2356]">¡Bienvenido al Portal!</div>
+              <div className="text-[9px] text-slate-500">Tu empresa ya puede gestionar todo desde acá.</div>
+            </div>
+          )}
+        </div>
+        {/* dedo que toca el botón */}
+        <span className={`ps-dedo absolute bottom-[8%] right-[18%] h-7 w-7 rounded-full border-2 border-white bg-white/40 ${local > 2900 && !listo ? "opacity-100" : "opacity-0"} ${toca && !listo ? "scale-75" : ""}`} />
+      </div>
+      <div className="ps-sello absolute bottom-[8%] left-[4%] rounded-2xl border border-cyan-300/40 bg-cyan-950/70 px-3 py-2 text-xs font-bold text-cyan-100 shadow-xl backdrop-blur">
+        Exclusivo para empresas socias
+      </div>
+      <div className="ps-sello absolute bottom-[8%] right-[4%] rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold backdrop-blur" style={{ animationDelay: ".4s" }}>
+        ⏱ 2 minutos
+      </div>
+    </Marco>
+  );
+}
+
 function Etiqueta({ children }: { children: React.ReactNode }) {
   return <div className="ps-etiqueta absolute inset-x-3 bottom-3 rounded-xl bg-black/55 px-3 py-2 text-center text-xs font-semibold text-white/90 backdrop-blur">{children}</div>;
 }
@@ -358,6 +416,16 @@ const CSS = `
 @keyframes ps-sube { from { opacity: 0; transform: translateY(16px); filter: blur(4px); } }
 .ps-velocidad { width: 8px; height: 8px; border-radius: 999px; background: currentColor; animation: ps-titila infinite ease-in-out; }
 @keyframes ps-titila { 50% { opacity: .2; transform: scale(.6); } }
+.ps-pregunta { font-size: clamp(3.6rem, 9vw, 7rem); animation: ps-pregunta .9s cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes ps-pregunta { from { opacity: 0; transform: scale(.6) rotate(-4deg); } }
+.ps-final .ps-cta { transform: scale(1.08); animation: ps-pulso 1.2s ease-out infinite; }
+.ps-sumate { background: radial-gradient(circle at 50% 40%, rgba(34,211,238,.18), transparent 65%); }
+.ps-cursor { animation: ps-titila .8s steps(1) infinite; color: #0891b2; font-weight: 700; }
+.ps-dedo { transition: opacity .3s, transform .15s; box-shadow: 0 0 0 6px rgba(255,255,255,.15); }
+.ps-bienvenida { animation: ps-pop .5s cubic-bezier(.2,.9,.3,1.5) both; }
+.ps-confeti { position: absolute; top: -5%; width: 8px; height: 12px; border-radius: 2px; animation: ps-cae 2.4s ease-in forwards; }
+@keyframes ps-cae { to { transform: translateY(420px) rotate(540deg); opacity: 0; } }
+.ps-sello { animation: ps-pop .5s .3s cubic-bezier(.2,.9,.3,1.5) both, ps-flota 3s 1s ease-in-out infinite; }
 .ps-escuchar { animation: ps-pulso-b 1.6s ease-out infinite; }
 @keyframes ps-pulso-b { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 100% { box-shadow: 0 0 0 12px rgba(255,255,255,0); } }
 .ps-cta { box-shadow: 0 14px 34px -12px rgba(0,0,0,.6); animation: ps-pulso 2.4s ease-out infinite; }
