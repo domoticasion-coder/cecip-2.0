@@ -310,37 +310,40 @@ function Escena2000() {
   );
 }
 
-/** Hoy: el Portal de Socios en el celular, con avisos que llegan */
+// Capturas reales del Portal de Socios (con una empresa de ejemplo), 390x844 a doble resolución
+const PANT = "/images/portal";
+
+/** Celular con capturas reales del Portal; cambia de pantalla con un fundido */
+function TelReal({ pantalla, children }: { pantalla: string; children?: React.ReactNode }) {
+  const pantallas = ["login", "inicio", "convenios", "eventos"];
+  return (
+    <div className="ps-celu absolute left-1/2 top-[4%] h-[92%] -translate-x-1/2">
+      <div className="relative h-full overflow-hidden rounded-[1.7rem] border-[5px] border-[#0b1020] bg-white shadow-[0_30px_60px_-20px_rgba(0,0,0,.85),0_0_0_1px_rgba(255,255,255,.25),0_0_50px_rgba(167,139,250,.4)]"
+        style={{ aspectRatio: "390 / 844", containerType: "inline-size" }}>
+        {pantallas.map((n) => (
+          <img key={n} src={`${PANT}/${n}.webp`} alt={n === pantalla ? `Portal de Socios: ${n}` : ""} draggable={false}
+            className="absolute inset-0 h-full w-full select-none object-cover object-top transition-all duration-700"
+            style={{ opacity: n === pantalla ? 1 : 0, transform: n === pantalla ? "none" : "scale(1.03)" }} />
+        ))}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Hoy: el Portal de Socios real en el celular, con avisos que llegan */
 function EscenaHoy({ local }: { local: number }) {
-  const avisos = AVISOS.filter((_, i) => local > 2200 + i * 1700);
+  const avisos = AVISOS.filter((_, i) => local > 2600 + i * 2400);
+  const pantalla = local < 5200 ? "inicio" : local < 10000 ? "convenios" : "eventos";
   return (
     <Marco className="ps-hoy">
-      <svg className="absolute inset-0 h-full w-full opacity-60" viewBox="0 0 100 80" preserveAspectRatio="none" aria-hidden>
+      <svg className="absolute inset-0 h-full w-full opacity-50" viewBox="0 0 100 80" preserveAspectRatio="none" aria-hidden>
         {[[8, 12, 30, 40], [30, 40, 12, 70], [30, 40, 60, 20], [60, 20, 92, 34], [92, 34, 80, 72], [60, 20, 80, 72], [12, 70, 50, 76]].map(([a, b, c, d], i) => (
           <line key={i} x1={a} y1={b} x2={c} y2={d} stroke="#a78bfa" strokeWidth=".25" className="ps-sinapsis" style={{ animationDelay: `${i * 0.3}s` }} />
         ))}
-        {[[8, 12], [30, 40], [12, 70], [60, 20], [92, 34], [80, 72], [50, 76]].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="1.1" fill="#c4b5fd" className="ps-neurona" style={{ animationDelay: `${i * 0.25}s` }} />
-        ))}
       </svg>
-      <div className="ps-celu absolute left-1/2 top-[5%] h-[90%] -translate-x-1/2" style={{ aspectRatio: "9 / 18" }}>
-        <div className="flex h-full flex-col overflow-hidden rounded-[1.8rem] border-[3px] border-white/70 bg-[#0b1230] shadow-[0_30px_60px_-20px_rgba(0,0,0,.8),0_0_50px_rgba(167,139,250,.45)]">
-          <div className="mx-auto mt-1.5 h-3 w-1/3 rounded-full bg-black" />
-          <div className="bg-gradient-to-r from-[#0c2356] to-violet-700 px-3 py-2">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-sky-200">Portal de Socios</div>
-            <div className="text-[11px] font-bold">CeCIP Paraná</div>
-          </div>
-          <div className="grid flex-1 grid-cols-3 content-start gap-1.5 p-2">
-            {GESTIONES.map(({ icono: Icono, txt }, i) => (
-              <div key={txt} className="ps-tile flex flex-col items-center gap-1 rounded-lg bg-white/[.08] px-1 py-1.5 text-center" style={{ animationDelay: `${0.3 + i * 0.13}s` }}>
-                <span className="grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br from-[#00a3e0] to-violet-500"><Icono size={12} /></span>
-                <span className="text-[7.5px] font-semibold leading-tight text-slate-200">{txt}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="absolute right-[3%] top-[8%] flex w-[44%] flex-col items-end gap-2">
+      <TelReal pantalla={pantalla} />
+      <div className="absolute right-[2%] top-[10%] flex w-[40%] flex-col items-end gap-2">
         {avisos.map((a) => (
           <div key={a} className="ps-aviso flex items-center gap-2 rounded-xl border border-white/15 bg-white/95 px-3 py-2 text-[11px] font-semibold text-slate-800 shadow-xl">
             {a.endsWith("✓") ? <CheckCircle2 size={14} className="shrink-0 text-emerald-600" /> : <Bell size={14} className="shrink-0 text-violet-600" />}
@@ -348,55 +351,45 @@ function EscenaHoy({ local }: { local: number }) {
           </div>
         ))}
       </div>
-      <div className="ps-chip-ia absolute bottom-[8%] right-[4%] flex items-center gap-1.5 rounded-full bg-violet-500 px-3 py-1.5 text-xs font-bold shadow-[0_0_24px_rgba(167,139,250,.8)]">
+      <div className="ps-chip-ia absolute bottom-[7%] left-[3%] flex items-center gap-1.5 rounded-full bg-violet-500 px-3 py-1.5 text-xs font-bold shadow-[0_0_24px_rgba(167,139,250,.8)]">
         <Bot size={14} /> Copiloto con IA · 24 h
       </div>
     </Marco>
   );
 }
 
-/** Gancho final: alguien se registra en el Portal con el CUIT de su empresa */
+/** Gancho final: alguien entra al Portal de Socios real (pantalla de ingreso → inicio) */
 function EscenaSumate({ local }: { local: number }) {
-  const escribir = (texto: string, desde: number, ms = 55) => texto.slice(0, Math.max(0, Math.floor((local - desde) / ms)));
-  const empresa = escribir("Tu Empresa S.A.", 900);
-  const cuit = escribir("30-12345678-9", 2000, 70);
-  const toca = local > 3400;
-  const listo = local > 4100;
+  const escribir = (texto: string, desde: number, ms = 60) => texto.slice(0, Math.max(0, Math.floor((local - desde) / ms)));
+  const email = escribir("contacto@tuempresa.com.ar", 900);
+  const clave = escribir("••••••••", 2700, 90);
+  const toca = local > 3800 && local < 4300;
+  const adentro = local > 4300;
+  const pantalla = !adentro ? "login" : local < 9000 ? "inicio" : local < 11500 ? "convenios" : "eventos";
   return (
     <Marco className="ps-sumate">
-      {listo && Array.from({ length: 18 }, (_, i) => (
-        <span key={i} className="ps-confeti" style={{ left: `${(i * 53) % 100}%`, background: ["#22d3ee", "#a78bfa", "#f59e0b", "#34d399"][i % 4], animationDelay: `${(i % 6) * 0.12}s` }} />
+      {adentro && local < 7000 && Array.from({ length: 22 }, (_, i) => (
+        <span key={i} className="ps-confeti" style={{ left: `${(i * 47) % 100}%`, background: ["#22d3ee", "#a78bfa", "#f59e0b", "#34d399"][i % 4], animationDelay: `${(i % 7) * 0.1}s` }} />
       ))}
-      <div className="ps-celu absolute left-1/2 top-[5%] h-[90%] -translate-x-1/2" style={{ aspectRatio: "9 / 18" }}>
-        <div className="flex h-full flex-col overflow-hidden rounded-[1.8rem] border-[3px] border-white/70 bg-white text-slate-800 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8),0_0_50px_rgba(34,211,238,.45)]">
-          <div className="mx-auto mt-1.5 h-3 w-1/3 rounded-full bg-black" />
-          <div className="bg-gradient-to-r from-[#0c2356] to-[#0891b2] px-3 py-2 text-white">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-cyan-200">Portal de Socios</div>
-            <div className="text-[11px] font-bold">Crear mi cuenta</div>
-          </div>
-          {!listo ? (
-            <div className="flex flex-1 flex-col gap-2 p-3 text-[9px]">
-              <label className="font-semibold text-slate-500">Razón social</label>
-              <div className="h-6 rounded-md border border-slate-300 px-2 leading-6 text-[10px]">{empresa}<span className={empresa.length < 15 && local > 900 ? "ps-cursor" : "hidden"}>|</span></div>
-              <label className="font-semibold text-slate-500">CUIT de la empresa</label>
-              <div className="h-6 rounded-md border border-slate-300 px-2 leading-6 text-[10px] tabular-nums">{cuit}<span className={local > 2000 && cuit.length < 13 ? "ps-cursor" : "hidden"}>|</span></div>
-              <div className={`mt-auto rounded-md py-1.5 text-center text-[10px] font-bold text-white transition ${toca ? "scale-95 bg-[#0c2356]" : "bg-[#0891b2]"}`}>Crear cuenta</div>
-            </div>
-          ) : (
-            <div className="ps-bienvenida flex flex-1 flex-col items-center justify-center gap-2 p-3 text-center">
-              <CheckCircle2 size={38} className="text-emerald-500" />
-              <div className="text-[13px] font-bold text-[#0c2356]">¡Bienvenido al Portal!</div>
-              <div className="text-[9px] text-slate-500">Tu empresa ya puede gestionar todo desde acá.</div>
-            </div>
-          )}
+      <TelReal pantalla={pantalla}>
+        {!adentro && (
+          <>
+            {/* lo que se escribe en los campos reales de la pantalla de ingreso */}
+            <span className="ps-campo absolute left-[15.6%] top-[44.6%] bg-white pr-1 text-slate-800">{email || <span className="text-slate-400">nombre@empresa.com</span>}{local > 900 && email.length < 25 && <span className="ps-cursor">|</span>}</span>
+            <span className="ps-campo absolute left-[15.6%] top-[53.2%] tracking-widest text-slate-800">{clave}{local > 2700 && clave.length < 8 && <span className="ps-cursor">|</span>}</span>
+            <span className={`ps-dedo absolute left-1/2 top-[66.2%] h-[7%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0c2356]/30 ${local > 3300 ? "opacity-100" : "opacity-0"} ${toca ? "scale-75" : ""}`} style={{ aspectRatio: "1" }} />
+          </>
+        )}
+      </TelReal>
+      {adentro && (
+        <div className="ps-bienvenida absolute left-1/2 top-[44%] flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-2xl" style={{ animation: "ps-pop .5s cubic-bezier(.2,.9,.3,1.5) both, ps-esfuma 4.5s forwards" }}>
+          <CheckCircle2 size={18} /> ¡Bienvenido al Portal!
         </div>
-        {/* dedo que toca el botón */}
-        <span className={`ps-dedo absolute bottom-[8%] right-[18%] h-7 w-7 rounded-full border-2 border-white bg-white/40 ${local > 2900 && !listo ? "opacity-100" : "opacity-0"} ${toca && !listo ? "scale-75" : ""}`} />
-      </div>
-      <div className="ps-sello absolute bottom-[8%] left-[4%] rounded-2xl border border-cyan-300/40 bg-cyan-950/70 px-3 py-2 text-xs font-bold text-cyan-100 shadow-xl backdrop-blur">
+      )}
+      <div className="ps-sello absolute bottom-[8%] left-[3%] rounded-2xl border border-cyan-300/40 bg-cyan-950/70 px-3 py-2 text-xs font-bold text-cyan-100 shadow-xl backdrop-blur">
         Exclusivo para empresas socias
       </div>
-      <div className="ps-sello absolute bottom-[8%] right-[4%] rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold backdrop-blur" style={{ animationDelay: ".4s" }}>
+      <div className="ps-sello absolute bottom-[8%] right-[3%] rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold backdrop-blur" style={{ animationDelay: ".4s" }}>
         ⏱ 2 minutos
       </div>
     </Marco>
@@ -420,6 +413,8 @@ const CSS = `
 @keyframes ps-pregunta { from { opacity: 0; transform: scale(.6) rotate(-4deg); } }
 .ps-final .ps-cta { transform: scale(1.08); animation: ps-pulso 1.2s ease-out infinite; }
 .ps-sumate { background: radial-gradient(circle at 50% 40%, rgba(34,211,238,.18), transparent 65%); }
+.ps-campo { font-size: 3.6cqw; line-height: 1; white-space: nowrap; font-family: Inter, sans-serif; }
+@keyframes ps-esfuma { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 .ps-cursor { animation: ps-titila .8s steps(1) infinite; color: #0891b2; font-weight: 700; }
 .ps-dedo { transition: opacity .3s, transform .15s; box-shadow: 0 0 0 6px rgba(255,255,255,.15); }
 .ps-bienvenida { animation: ps-pop .5s cubic-bezier(.2,.9,.3,1.5) both; }
