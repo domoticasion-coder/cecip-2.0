@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent, FormEvent } from "react";
 import { 
   Phone, 
   Mail, 
@@ -600,6 +600,10 @@ export default function App() {
 
   // Navigation states
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  // los menús desplegables se cierran con una pequeña demora, así no se cierran al bajar el mouse hacia la lista
+  const cierreMenu = useRef<number>(0);
+  const abrirMenu = (m: string) => { clearTimeout(cierreMenu.current); setActiveMenu(m); };
+  const cerrarMenu = () => { clearTimeout(cierreMenu.current); cierreMenu.current = window.setTimeout(() => setActiveMenu(null), 220); };
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<"home" | "subpage">("home");
@@ -1070,8 +1074,8 @@ export default function App() {
             {/* Dropdown 1: Institucional */}
             <div 
               className="relative"
-              onMouseEnter={() => setActiveMenu("institucional")}
-              onMouseLeave={() => setActiveMenu(null)}
+              onMouseEnter={() => abrirMenu("institucional")}
+              onMouseLeave={cerrarMenu}
             >
               <button className={`text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer ${activeMenu === "institucional" || (currentView === "subpage" && activeSubPage?.categoryName === "Institucional" && activeSubPage?.title !== "Comercios Asociados") ? "text-[#00a3e0]" : "text-slate-700 hover:text-[#00a3e0]"}`}>
                 Institucional <ChevronDown size={14} className={`transition-transform duration-200 ${activeMenu === "institucional" ? "rotate-180" : ""}`} />
@@ -1079,7 +1083,7 @@ export default function App() {
               
               {activeMenu === "institucional" && (
                 <div 
-                  className="absolute left-0 mt-1 w-56 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150"
+                  className="absolute left-0 mt-1 w-56 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150 before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
                 >
                   {dropdownMenus.institucional.map((item, idx) => (
                     <button 
@@ -1117,8 +1121,8 @@ export default function App() {
             {/* Dropdown 2: Camaras */}
             <div 
               className="relative"
-              onMouseEnter={() => setActiveMenu("camaras")}
-              onMouseLeave={() => setActiveMenu(null)}
+              onMouseEnter={() => abrirMenu("camaras")}
+              onMouseLeave={cerrarMenu}
             >
               <button className={`text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer ${activeMenu === "camaras" || (currentView === "subpage" && activeSubPage?.categoryName === "Cámaras Sectoriales") ? "text-[#00a3e0]" : "text-slate-700 hover:text-[#00a3e0]"}`}>
                 Camaras <ChevronDown size={14} className={`transition-transform duration-200 ${activeMenu === "camaras" ? "rotate-180" : ""}`} />
@@ -1126,7 +1130,7 @@ export default function App() {
 
               {activeMenu === "camaras" && (
                 <div 
-                  className="absolute left-0 mt-1 w-56 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150"
+                  className="absolute left-0 mt-1 w-56 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150 before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
                 >
                   {dropdownMenus.camaras.map((item, idx) => (
                     <button 
@@ -1157,8 +1161,8 @@ export default function App() {
             {/* Dropdown 3: Entidades */}
             <div 
               className="relative"
-              onMouseEnter={() => setActiveMenu("entidades")}
-              onMouseLeave={() => setActiveMenu(null)}
+              onMouseEnter={() => abrirMenu("entidades")}
+              onMouseLeave={cerrarMenu}
             >
               <button className={`text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer ${activeMenu === "entidades" || (currentView === "subpage" && activeSubPage?.categoryName === "Entidades Adheridas") ? "text-[#00a3e0]" : "text-slate-700 hover:text-[#00a3e0]"}`}>
                 Entidades <ChevronDown size={14} className={`transition-transform duration-200 ${activeMenu === "entidades" ? "rotate-180" : ""}`} />
@@ -1166,7 +1170,7 @@ export default function App() {
 
               {activeMenu === "entidades" && (
                 <div 
-                  className="absolute left-0 mt-1 w-64 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150"
+                  className="absolute left-0 mt-1 w-64 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50 transition-all duration-150 before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
                 >
                   {dropdownMenus.entidades.map((item, idx) => (
                     <button 
