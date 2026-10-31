@@ -4,6 +4,7 @@ import {
   Zap, Smartphone, Users, TrendingUp, CheckCircle2,
 } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
+import { CuentaRegresiva } from "./CuentaRegresiva";
 
 /**
  * Página "Conocé ComercIA": qué es la web app ComercIA Paraná y el convenio CeCIP + Instituto IEC + La FactorIA.
@@ -75,6 +76,12 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
         <div className="relative mx-auto grid max-w-[1280px] items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
           <div>
             <img src={`${IMG}/logo-comercia.webp`} alt="ComercIA Inteligente Paraná" className="cc-logo h-20 w-auto sm:h-24" />
+            <div className="mt-6">
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-amber-300">
+                <span className="cc-vivo h-2 w-2 rounded-full bg-amber-400" /> Lanzamiento oficial · 1° de diciembre
+              </div>
+              <CuentaRegresiva />
+            </div>
             <h1 className="font-display mt-6 text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
               Todo Paraná,<br /><span className="cc-degradado">en un solo lugar.</span>
             </h1>
@@ -134,6 +141,23 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">{d}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------ urgencia para comercios */}
+      <section className="px-3 pb-10 sm:px-6 lg:px-8">
+        <div className="cc-urgencia relative mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-r from-amber-500/15 via-[#0b1d44] to-violet-600/20 p-6 sm:p-8 lg:flex-row lg:items-center">
+          <div className="max-w-xl">
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Comercios: no pierdan tiempo</div>
+            <h2 className="font-display mt-2 text-2xl font-bold leading-tight sm:text-3xl">El 1° de diciembre los vecinos empiezan a buscar en ComercIA. ¿Tu comercio va a estar?</h2>
+            <p className="mt-2 text-sm text-slate-300">Adherite antes del lanzamiento y aparecé en las búsquedas desde el primer día. Si sos socio del CeCIP, tenés 50% OFF en tu Sucursal Virtual.</p>
+          </div>
+          <div className="flex flex-col items-start gap-4">
+            <CuentaRegresiva />
+            <a href={URL_ADHESION} target="_blank" rel="noopener noreferrer" className="cc-cta cc-pulso inline-flex items-center gap-2 rounded-xl bg-amber-400 px-6 py-3.5 text-sm font-bold text-amber-950 transition hover:-translate-y-0.5 hover:bg-amber-300">
+              Quiero adherir mi comercio <ArrowRight size={16} />
+            </a>
           </div>
         </div>
       </section>
@@ -245,5 +269,9 @@ const CSS = `
 @keyframes cc-scroll { 0%, 12% { transform: translateY(0); } 100% { transform: translateY(-48%); } }
 .cc-flota { animation: cc-flotar 4s ease-in-out infinite; }
 .cc-beneficio { animation: cc-entra .5s cubic-bezier(.2,.9,.3,1) both; }
+.cc-vivo { animation: cc-vivo 1.4s ease-in-out infinite; }
+@keyframes cc-vivo { 50% { opacity: .3; transform: scale(.7); } }
+.cc-pulso { animation: cc-pulso 2s ease-out infinite; }
+@keyframes cc-pulso { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,.6); } 100% { box-shadow: 0 0 0 16px rgba(251,191,36,0); } }
 @media (prefers-reduced-motion: reduce) { .cc *, .cc *::before { animation: none !important; } }
 `;

@@ -3,6 +3,7 @@ import { ArrowRight, Bot, Cctv, Flame, Hammer, MapPin, Megaphone, MessageCircle,
 import { ERP_URL } from "../lib/erp";
 import { clamp, lerp, movimientoReducido, suave, tramo } from "../lib/animacion";
 import { useNarracion } from "../lib/narracion";
+import { CuentaRegresiva } from "./CuentaRegresiva";
 
 /**
  * ComercIA Inteligente: una animación tipo video (4 capítulos) que se reproduce sola al verla.
@@ -190,6 +191,7 @@ function ComercIAVideo({ onConocer }: { onConocer?: () => void }) {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <img src={`${IMG}/logo-comercia.webp`} alt="ComercIA Inteligente Paraná" className="cia-logo h-14 w-auto sm:h-20" />
               <Firma />
+              <CuentaRegresiva compacta />
               {onConocer && (
                 <button type="button" onClick={onConocer}
                   className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/40 bg-[#00a3e0]/15 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00a3e0]">
