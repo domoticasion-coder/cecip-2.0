@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 
 /**
  * Animación de inicio de la web: los íconos del comercio (bolsa, local, carrito, etiqueta)
- * orbitan y se juntan en el logo CeCIP; al final aparece "Entrar al sitio" y la cortina se abre hacia arriba.
- * Se entra con un clic, un toque o una tecla: ese gesto es el que deja a la web reproducir el sonido
- * de los videos (ComercIA y Portal de Socios) apenas aparecen; sin él los navegadores no dejan sonar audio.
+ * orbitan y se juntan en el logo CeCIP; después la cortina se abre hacia arriba.
+ * Se muestra una vez por sesión del navegador; se saltea con un click o con cualquier tecla.
  */
 
 const DURACION = 2600;
@@ -25,9 +24,13 @@ const ICONOS = [
   "M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z",
 ];
 
+function yaVista() {
+  try { return sessionStorage.getItem(CLAVE) === "1"; } catch { return false; }
+}
+
 export default function IntroWeb() {
   const [estado, setEstado] = useState<"oculta" | "activa" | "saliendo">(() => {
-    if (typeof window === "undefined") return "oculta";
+    if (typeof window === "undefined" || yaVista()) return "oculta";
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return "oculta";
     return "activa";
   });
@@ -37,8 +40,9 @@ export default function IntroWeb() {
     try { sessionStorage.setItem(CLAVE, "1"); } catch { /* sin almacenamiento: se muestra igual */ }
     document.documentElement.style.overflow = "hidden";
     const salir = () => setEstado((e) => (e === "activa" ? "saliendo" : e));
+    const t = setTimeout(salir, DURACION);
     window.addEventListener("keydown", salir);
-    return () => window.removeEventListener("keydown", salir);
+    return () => { clearTimeout(t); window.removeEventListener("keydown", salir); };
   }, [estado]);
 
   useEffect(() => {
@@ -73,11 +77,7 @@ export default function IntroWeb() {
           <div className="iw-sub">Centro Comercial e Industrial de Paraná</div>
         </div>
       </div>
-      <button type="button" className="iw-entrar" onClick={(e) => { e.stopPropagation(); setEstado("saliendo"); }}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" /></svg>
-        Entrar al sitio
-      </button>
-      <div className="iw-saltar">Activá el sonido para vivir la experiencia completa</div>
+      <div className="iw-saltar">Tocá para entrar</div>
     </div>
   );
 }
@@ -116,13 +116,6 @@ const CSS = `
 .iw-sub { color: #bae6fd; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; opacity: 0;
   animation: iw-sub .6s ease-out 1.7s forwards; }
 @keyframes iw-sub { from { opacity: 0; transform: translateY(6px); } to { opacity: .9; transform: none; } }
-.iw-entrar { position: absolute; left: 50%; bottom: 14%; display: inline-flex; align-items: center; gap: .55rem; cursor: pointer;
-  padding: .9rem 1.6rem; border-radius: 999px; font: 700 15px Inter, sans-serif; color: #fff; background: #00a3e0;
-  box-shadow: 0 14px 34px -10px rgba(0,163,224,.9); opacity: 0; transform: translate(-50%, 14px);
-  animation: iw-entrar .6s ease-out ${DURACION - 400}ms forwards, iw-pulso 2s ease-out ${DURACION + 400}ms infinite; }
-.iw-entrar:hover { background: #0393c9; }
-@keyframes iw-entrar { to { opacity: 1; transform: translate(-50%, 0); } }
-@keyframes iw-pulso { 0% { box-shadow: 0 0 0 0 rgba(0,163,224,.6), 0 14px 34px -10px rgba(0,163,224,.9); } 100% { box-shadow: 0 0 0 18px rgba(0,163,224,0), 0 14px 34px -10px rgba(0,163,224,.9); } }
 .iw-saltar { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,.4); font-size: 12px; }
 @media (max-width: 480px) { .iw-letras { font-size: 60px; } .iw-sub { font-size: 10px; padding: 0 16px; } .iw-centro { width: 280px; height: 280px; } }
 `;
