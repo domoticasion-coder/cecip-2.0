@@ -165,7 +165,7 @@ export default function BannerPortalSocios() {
             <button type="button" onClick={() => sonido.alternar(k)} aria-pressed={sonido.voz}
               className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition ${sonido.voz && sonido.bloqueado ? "ps-escuchar bg-white text-[#0c2356]" : sonido.voz ? "bg-white/15 text-white" : "border border-white/25 text-white hover:bg-white/10"}`}>
               {sonido.voz && !sonido.bloqueado ? <Volume2 size={13} /> : <VolumeX size={13} />}
-              <span className="hidden sm:inline">{!sonido.voz ? "Activar sonido" : sonido.bloqueado ? "Tocá para escuchar" : "Sonido"}</span>
+              <span className="hidden sm:inline">{!sonido.voz ? "Activar sonido" : sonido.bloqueado ? "Activar sonido" : "Sonido"}</span>
             </button>
             <div className="relative h-8 flex-1">
               <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/15" />

@@ -251,7 +251,7 @@ function ComercIAVideo() {
           <button type="button" onClick={alternarVoz} aria-pressed={voz}
             className={`flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-xs font-bold transition-colors ${voz && bloqueado ? "cia-escuchar bg-[#00a3e0] text-white" : voz ? "bg-[#00a3e0] text-white" : oscuro ? "border border-white/25 text-white hover:bg-white/10" : "cia-escuchar border border-[#00a3e0] bg-white text-[#0c2356]"}`}>
             {voz && !bloqueado ? <Volume2 size={15} /> : <VolumeX size={15} />}
-            {!voz ? "Activar sonido" : bloqueado ? "Tocá para escuchar" : "Sonido activado"}
+            {!voz ? "Activar sonido" : bloqueado ? "Activar sonido" : "Sonido activado"}
           </button>
           <div className="flex gap-1.5 sm:hidden">
             {CAPITULOS.map((_, i) => (
