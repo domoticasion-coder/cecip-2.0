@@ -206,11 +206,14 @@ function Escena1898() {
 function Escena1930() {
   return (
     <Marco>
-      <div className="ps-foto absolute left-[6%] top-[10%] h-[62%] w-[52%] overflow-hidden rounded-2xl border-4 border-amber-100/80 shadow-2xl">
-        <img src="/images/cecip_facade_1782854712610.jpg" alt="Sede del CeCIP" className="h-full w-full object-cover" style={{ filter: "sepia(.85) contrast(1.1) brightness(.9)" }} />
+      {/* la foto real de la sede: aparece en blanco y negro y se revela a color */}
+      <div className="ps-foto absolute left-[4%] top-[5%] aspect-[1.6] w-[74%] overflow-hidden rounded-2xl border-4 border-amber-100/80 shadow-2xl">
+        <img src="/images/cecip-sede-1930-original.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ filter: "sepia(.35)" }} />
+        <img src="/images/cecip-sede-1930-color.jpg" alt="Sede del Centro Comercial de Paraná, inaugurada en 1930" className="ps-revela absolute inset-0 h-full w-full object-cover" />
+        <span className="ps-revela-linea absolute inset-y-0 w-[3px] bg-amber-100 shadow-[0_0_14px_rgba(253,230,138,.9)]" />
         <div className="absolute bottom-0 inset-x-0 bg-black/60 px-2 py-1 text-center text-[11px] font-bold tracking-wider text-amber-100">SEDE PROPIA · 1930</div>
       </div>
-      <div className="absolute bottom-[14%] right-[10%]">
+      <div className="absolute bottom-[16%] right-[5%] scale-[.8]">
         {[0, 1, 2].map((i) => <span key={i} className="ps-onda-radio" style={{ animationDelay: `${i * 0.5}s` }} />)}
         <div className="relative grid h-24 w-28 place-items-center rounded-2xl border-2 border-amber-300/70 bg-gradient-to-b from-amber-700 to-amber-950 shadow-2xl">
           <Radio size={40} className="text-amber-100" />
@@ -354,6 +357,10 @@ const CSS = `
 @keyframes ps-ring { to { transform: scale(1.6); opacity: 0; } }
 .ps-foto { animation: ps-foto 1s .2s cubic-bezier(.2,.9,.3,1.2) both; }
 @keyframes ps-foto { from { opacity: 0; transform: rotate(-12deg) scale(.6); } to { transform: rotate(-3deg); } }
+.ps-revela { clip-path: inset(0 100% 0 0); animation: ps-revela 2.2s 1s cubic-bezier(.6,0,.3,1) forwards; }
+@keyframes ps-revela { to { clip-path: inset(0 0 0 0); } }
+.ps-revela-linea { left: 0; opacity: 0; animation: ps-linea-revela 2.2s 1s cubic-bezier(.6,0,.3,1) forwards; }
+@keyframes ps-linea-revela { 0% { left: 0; opacity: 1; } 95% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
 .ps-onda-radio { position: absolute; left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 999px; border: 2px solid rgba(251,191,36,.6); animation: ps-onda 1.6s ease-out infinite; }
 @keyframes ps-onda { from { transform: scale(.8); opacity: .9; } to { transform: scale(2.4); opacity: 0; } }
 .ps-ecualizador { width: 4px; height: 12px; border-radius: 2px; background: #fde68a; animation: ps-ecu .5s ease-in-out infinite alternate; }
