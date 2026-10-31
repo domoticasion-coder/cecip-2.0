@@ -9,6 +9,7 @@ import { ErpSocio } from "../types";
 import type { GrupoErp } from "../lib/erp";
 import BolsaEmpleoPagina from "./BolsaEmpleoPagina";
 import ActividadesGrupo from "./ActividadesGrupo";
+import ConoceComercia from "./ConoceComercia";
 
 // rubro sin acentos ni mayúsculas mezcladas, para agrupar "Calzado y Vestimenta" con "CALZADO Y VESTIMENTA"
 const normalizarRubro = (r?: string) =>
@@ -41,6 +42,8 @@ export interface SubPageViewProps {
   /** Eventos, actividades y capacitaciones de Mujeres y Jóvenes Empresarios (del ERP) */
   gruposErp?: GrupoErp[];
   totalSocios?: number;
+  /** "Buscar comercios" de la página Conocé ComercIA */
+  onBuscarComercios?: () => void;
 }
 
 export default function SubPageView({
@@ -55,7 +58,8 @@ export default function SubPageView({
   onSelectSocio,
   onOpenAsociateModal,
   gruposErp = [],
-  totalSocios = 200
+  totalSocios = 200,
+  onBuscarComercios
 }: SubPageViewProps) {
   // State for Comercios directory when viewed as a tab
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,6 +71,7 @@ export default function SubPageView({
   const isComercios = pageTitle.toLowerCase().includes("comercio") && pageTitle.toLowerCase().includes("asociado");
   const isNews = !!newsItem;
   const isBolsa = pageTitle.toLowerCase().includes("bolsa de empleo");
+  const isComercia = pageTitle.toLowerCase().includes("comercia") && !pageTitle.toLowerCase().includes("comercios");
   const tituloMin = pageTitle.toLowerCase();
   const grupo: "mujeres" | "jovenes" | null = tituloMin.includes("mujeres empresarias") ? "mujeres" : tituloMin.includes("jóvenes empresarios") ? "jovenes" : null;
 
@@ -498,7 +503,10 @@ export default function SubPageView({
         {/* --- BOLSA DE EMPLEO --- */}
         {isBolsa && <BolsaEmpleoPagina empresas={totalSocios} onAsociarse={onOpenAsociateModal} />}
 
-        {!isAutoridades && !isComercios && !isNews && !isBolsa && (
+        {/* --- CONOCÉ COMERCIA --- */}
+        {isComercia && <ConoceComercia onBuscarComercios={onBuscarComercios || onBackToHome} />}
+
+        {!isAutoridades && !isComercios && !isNews && !isBolsa && !isComercia && (
           <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-10">
             
             <div className="space-y-4">

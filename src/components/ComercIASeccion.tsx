@@ -164,12 +164,12 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
   };
 }
 
-export default function ComercIASeccion() {
+export default function ComercIASeccion({ onConocer }: { onConocer?: () => void }) {
   if (movimientoReducido()) return <ComercIAEstatica />;
-  return <ComercIAVideo />;
+  return <ComercIAVideo onConocer={onConocer} />;
 }
 
-function ComercIAVideo() {
+function ComercIAVideo({ onConocer }: { onConocer?: () => void }) {
   const ref = useRef<HTMLElement>(null);
   const { p, tiempo, pausa, setPausa, irA, voz, bloqueado, alternarVoz } = useVideo(ref);
   const n = CAPITULOS.length;
@@ -190,6 +190,12 @@ function ComercIAVideo() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <img src={`${IMG}/logo-comercia.webp`} alt="ComercIA Inteligente Paraná" className="cia-logo h-14 w-auto sm:h-20" />
               <Firma />
+              {onConocer && (
+                <button type="button" onClick={onConocer}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/40 bg-[#00a3e0]/15 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00a3e0]">
+                  Conocé ComercIA <ArrowRight size={13} />
+                </button>
+              )}
             </div>
             {CAPITULOS.map((c, i) => {
               let d = p * n - i - 0.5; // distancia al centro del capítulo

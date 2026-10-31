@@ -774,6 +774,11 @@ export default function App() {
         }
       }
 
+      if (hash === "#comercia" || hash === "#conoce-comercia" || pathname.includes("/conoce-comercia")) {
+        setActiveSubPage({ title: "Conocé ComercIA", categoryName: "ComercIA", badge: "ComercIA Inteligente" });
+        setCurrentView("subpage");
+      }
+
       if (hash === "#bolsa-de-empleo" || hash === "#bolsa" || pathname.includes("/bolsa-de-empleo")) {
         setActiveSubPage({ title: "Bolsa de Empleo", categoryName: "Servicios", badge: "Bolsa de Empleo CeCIP" });
         setCurrentView("subpage");
@@ -896,6 +901,12 @@ export default function App() {
         itemsList: newsArticle.itemsList,
         newsItem: newsArticle
       });
+      setCurrentView("subpage");
+      return;
+    }
+
+    if (key === "comercia" || key === "conocé comercia" || key === "conoce comercia") {
+      setActiveSubPage({ title: "Conocé ComercIA", categoryName: "ComercIA", badge: "ComercIA Inteligente" });
       setCurrentView("subpage");
       return;
     }
@@ -1196,9 +1207,16 @@ export default function App() {
               Capacitaciones
             </button>
 
+            <button
+              onClick={() => navigateToPage("Conocé ComercIA")}
+              className={`text-sm font-bold flex items-center gap-1 rounded-full px-3 py-1 transition-all cursor-pointer ${currentView === "subpage" && activeSubPage?.title === "Conocé ComercIA" ? "bg-gradient-to-r from-[#00a3e0] to-violet-500 text-white" : "bg-gradient-to-r from-[#00a3e0]/10 to-violet-500/10 text-[#0c2356] hover:from-[#00a3e0] hover:to-violet-500 hover:text-white"}`}
+            >
+              <Sparkles size={14} className="text-current" /> Conocé ComercIA
+            </button>
+
             <button 
               onClick={() => scrollToSection("footer-section")}
-              className="text-sm font-medium text-slate-700 hover:text-[#00a3e0] transition-colors cursor-pointer"
+              className="hidden xl:inline text-sm font-medium text-slate-700 hover:text-[#00a3e0] transition-colors cursor-pointer"
             >
               Contacto
             </button>
@@ -1557,7 +1575,7 @@ export default function App() {
       </section>
 
       {/* ComercIA Inteligente: historia con scroll */}
-      <ComercIASeccion />
+      <ComercIASeccion onConocer={() => navigateToPage("Conocé ComercIA")} />
 
       {/* 5. ASOCIARSE SECTION */}
       <section id="asociarse-section" className="py-20 px-3 sm:px-6 lg:px-8 bg-[#fafcff] overflow-hidden border-t border-slate-100">
@@ -1755,6 +1773,7 @@ export default function App() {
       itemsList={activeSubPage?.itemsList}
       newsItem={activeSubPage?.newsItem}
       gruposErp={gruposErp}
+      onBuscarComercios={() => navigateToPage("Comercios Asociados")}
       totalSocios={ALL_CECIP_SOCIOS.length}
       onBackToHome={() => navigateToHome()}
       onOpenAsociateModal={() => navigateToHome("asociarse-section")}
