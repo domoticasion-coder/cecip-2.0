@@ -144,7 +144,7 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">{d}</p>
                 {link && (
                   <a href="#cc-iec" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#7dd3fc] hover:underline">
-                    Conocé quién la respalda <ArrowRight size={14} />
+                    Conocé al Instituto IEC <ArrowRight size={14} />
                   </a>
                 )}
               </div>
