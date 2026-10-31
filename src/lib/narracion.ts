@@ -62,7 +62,7 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }
   };
 
   const sonarMusica = () => {
-    if (!vozRef.current) return;
+    if (!vozRef.current || document.hidden) return;
     if (!fondo.current) {
       fondo.current = new Audio(musica);
       fondo.current.loop = true;
@@ -77,7 +77,7 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }
   const apagar = () => { callar(); clearInterval(fundido.current); fondo.current?.pause(); };
   const hablar = (k: number, desde = 0) => {
     ultimo.current = k;
-    if (!vozRef.current) return;
+    if (!vozRef.current || document.hidden) return;
     callar();
     volumen(baja);
     if (!audios.current[k]) {
@@ -110,7 +110,18 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }
     hablar(k, desde);
   };
 
-  useEffect(() => () => apagar(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // si se cambia de pestaña, se minimiza la ventana o se sale de la página, se corta todo el sonido;
+  // al volver (y si la sección sigue a la vista) retoma donde estaba
+  useEffect(() => {
+    const cambio = () => {
+      if (document.hidden) apagar();
+      else if (vozRef.current && activo.current) { sonarMusica(); hablar(ultimo.current, posicion?.() ?? 0); }
+    };
+    const salir = () => apagar();
+    document.addEventListener("visibilitychange", cambio);
+    window.addEventListener("pagehide", salir);
+    return () => { document.removeEventListener("visibilitychange", cambio); window.removeEventListener("pagehide", salir); apagar(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { voz, vozRef, bloqueado, sonando, hablar, apagar, setActivo, alternar, audioDe: (k: number) => audios.current[k] as HTMLAudioElement | undefined };
 }
