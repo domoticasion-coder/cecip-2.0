@@ -1,0 +1,86 @@
+/*
+ * Modo oscuro de la web. Se activa con la clase "dark" en <html> (botón sol/luna de la barra superior,
+ * se recuerda en el navegador). En lugar de duplicar cada clase de color, acá se reasignan los colores
+ * claros más usados (fondos blancos y grises, textos oscuros, bordes y degradados claros) a sus
+ * equivalentes oscuros. Las secciones que ya son oscuras (ComercIA, Portal, pie) no cambian.
+ * Para que un elemento quede siempre claro (por ejemplo un logo sobre fondo blanco) se le pone la
+ * clase "tema-fijo".
+ */
+
+html.dark {
+  color-scheme: dark;
+  --o-fondo: #0b1220;
+  --o-sup: #111a2e;
+  --o-sup-2: #17233a;
+  --o-sup-3: #1e2c46;
+  --o-borde: rgba(148, 163, 184, 0.18);
+  --o-texto: #e5edf7;
+  --o-texto-2: #c3cfdf;
+  --o-texto-3: #94a3b8;
+  --o-azul: #7dd3fc;
+}
+html.dark body { background: var(--o-fondo); color: var(--o-texto); }
+
+/* ---------------------------------------------------------------- fondos */
+html.dark :is(.bg-white, .bg-white\/95, .bg-white\/90, .bg-white\/80, .bg-white\/70, .bg-white\/60, .bg-\[\#fafcff\]):not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup); }
+html.dark :is(.bg-slate-50, .bg-gray-50, .bg-\[\#f8fafc\], .bg-\[\#f1f5f9\], .bg-\[\#f0f8fc\], .bg-\[\#f0f8fd\], .bg-cecip-bg-light):not(.tema-fijo, .tema-fijo *) { background-color: var(--o-fondo); }
+html.dark :is(.bg-slate-50\/40, .bg-slate-50\/50, .bg-slate-50\/60, .bg-slate-50\/70, .bg-slate-50\/80, .bg-slate-50\/90):not(.tema-fijo, .tema-fijo *) { background-color: rgba(23, 35, 58, 0.6); }
+html.dark :is(.bg-slate-100, .bg-gray-100, .bg-slate-200\/60):not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup-2); }
+html.dark :is(.bg-slate-200, .bg-gray-200):not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup-3); }
+html.dark :is(.bg-sky-50, .bg-blue-50, .bg-sky-50\/40, .bg-sky-50\/70, .bg-sky-50\/80, .bg-indigo-50):not(.tema-fijo, .tema-fijo *) { background-color: rgba(0, 163, 224, 0.1); }
+html.dark :is(.bg-sky-100, .bg-blue-100, .bg-\[\#bae6fd\]):not(.tema-fijo, .tema-fijo *) { background-color: rgba(0, 163, 224, 0.18); }
+html.dark :is(.bg-emerald-50, .bg-green-50):not(.tema-fijo, .tema-fijo *) { background-color: rgba(16, 185, 129, 0.12); }
+html.dark :is(.bg-emerald-100, .bg-green-100):not(.tema-fijo, .tema-fijo *) { background-color: rgba(16, 185, 129, 0.2); }
+html.dark :is(.bg-amber-50, .bg-yellow-50):not(.tema-fijo, .tema-fijo *) { background-color: rgba(245, 158, 11, 0.12); }
+html.dark :is(.bg-amber-100):not(.tema-fijo, .tema-fijo *) { background-color: rgba(245, 158, 11, 0.2); }
+html.dark :is(.bg-rose-50, .bg-red-50):not(.tema-fijo, .tema-fijo *) { background-color: rgba(244, 63, 94, 0.12); }
+html.dark :is(.bg-rose-100, .bg-red-100):not(.tema-fijo, .tema-fijo *) { background-color: rgba(244, 63, 94, 0.2); }
+html.dark .bg-\[\#d9e6ff\]\/40 { background-color: rgba(0, 163, 224, 0.12); }
+
+/* fondos al pasar el mouse o al enfocar */
+html.dark :is(.hover\:bg-slate-50, .hover\:bg-gray-50, .hover\:bg-slate-50\/50, .hover\:bg-blue-50\/20):hover:not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup-2); }
+html.dark :is(.hover\:bg-slate-100, .hover\:bg-gray-100, .hover\:bg-slate-200\/60, .hover\:bg-slate-100\/70):hover:not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup-3); }
+html.dark :is(.hover\:bg-slate-200):hover:not(.tema-fijo, .tema-fijo *) { background-color: #26365a; }
+html.dark :is(.hover\:bg-white):hover:not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup-2); }
+html.dark :is(.hover\:bg-blue-50, .hover\:bg-indigo-50, .hover\:bg-sky-50, .hover\:bg-blue-100):hover:not(.tema-fijo, .tema-fijo *) { background-color: rgba(0, 163, 224, 0.16); }
+html.dark :is(.hover\:bg-rose-50):hover { background-color: rgba(244, 63, 94, 0.16); }
+html.dark :is(.focus\:bg-white):focus:not(.tema-fijo, .tema-fijo *) { background-color: var(--o-sup); }
+
+/* ---------------------------------------------------------------- degradados claros */
+html.dark :is(.from-white, .from-slate-50, .from-blue-50, .from-\[\#eef7ff\], .from-\[\#f0f8fd\]):not(.tema-fijo, .tema-fijo *) { --tw-gradient-from: var(--o-fondo); }
+html.dark :is(.via-white, .via-slate-50):not(.tema-fijo, .tema-fijo *) { --tw-gradient-via: var(--o-fondo); }
+html.dark :is(.to-white, .to-slate-50, .to-slate-50\/40, .to-slate-50\/60, .to-sky-50\/50, .to-blue-50\/20, .to-blue-50\/30, .to-blue-50\/50):not(.tema-fijo, .tema-fijo *) { --tw-gradient-to: var(--o-fondo); }
+
+/* ---------------------------------------------------------------- textos */
+html.dark :is(.text-slate-950, .text-slate-900, .text-gray-900, .text-black, .text-\[\#1e293b\]):not(.tema-fijo, .tema-fijo *) { color: var(--o-texto); }
+html.dark :is(.text-slate-800, .text-gray-800, .text-slate-700, .text-gray-700):not(.tema-fijo, .tema-fijo *) { color: var(--o-texto-2); }
+html.dark :is(.text-slate-600, .text-gray-600):not(.tema-fijo, .tema-fijo *) { color: #a9b6c8; }
+html.dark :is(.text-slate-500, .text-gray-500):not(.tema-fijo, .tema-fijo *) { color: var(--o-texto-3); }
+html.dark :is(.text-\[\#0c2356\], .text-cecip-navy, .text-\[\#071738\], .text-blue-900, .text-blue-800, .text-indigo-700):not(.tema-fijo, .tema-fijo *) { color: #dbeafe; }
+html.dark :is(.text-blue-700, .text-blue-600, .text-indigo-600):not(.tema-fijo, .tema-fijo *) { color: var(--o-azul); }
+html.dark :is(.text-emerald-700, .text-emerald-800, .text-green-700):not(.tema-fijo, .tema-fijo *) { color: #6ee7b7; }
+html.dark :is(.text-amber-700, .text-amber-800):not(.tema-fijo, .tema-fijo *) { color: #fcd34d; }
+html.dark :is(.text-rose-700, .text-red-700):not(.tema-fijo, .tema-fijo *) { color: #fda4af; }
+html.dark :is(.hover\:text-slate-900, .hover\:text-slate-800, .hover\:text-gray-900, .hover\:text-\[\#0c2356\]):hover:not(.tema-fijo, .tema-fijo *) { color: #fff; }
+html.dark :is(.hover\:text-slate-600, .hover\:text-slate-700):hover:not(.tema-fijo, .tema-fijo *) { color: var(--o-texto-2); }
+html.dark :is(.placeholder\:text-slate-400)::placeholder { color: #64748b; }
+
+/* ---------------------------------------------------------------- bordes y divisores */
+html.dark :is(.border-slate-50, .border-slate-100, .border-slate-200, .border-slate-300, .border-gray-100, .border-gray-200, .border-gray-300,
+  .border-slate-200\/60, .border-slate-200\/80, .border-slate-200\/70, .border-sky-100, .border-sky-100\/70, .border-sky-200, .border-blue-100, .border-blue-200,
+  .border-emerald-100, .border-emerald-200, .border-amber-200, .border-rose-200, .border-indigo-100):not(.tema-fijo, .tema-fijo *) { border-color: var(--o-borde); }
+html.dark :is(.divide-slate-100, .divide-slate-200, .divide-gray-100) > :not(:last-child) { border-color: var(--o-borde); }
+
+/* ---------------------------------------------------------------- formularios */
+html.dark :is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"], .tema-fijo, .tema-fijo *) { color: var(--o-texto); }
+html.dark :is(input, textarea)::placeholder { color: #64748b; }
+html.dark select option { background: var(--o-sup); color: var(--o-texto); }
+
+/* ---------------------------------------------------------------- detalles */
+html.dark :is(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl):not(.tema-fijo, .tema-fijo *) { --tw-shadow-color: rgba(0, 0, 0, 0.45); }
+/* mapa de comercios: calles en oscuro */
+html.dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92) saturate(0.7); }
+html.dark .leaflet-container { background: #0b1220; }
+
+/* transición suave al cambiar de tema */
+html.cambiando-tema, html.cambiando-tema * { transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease !important; }

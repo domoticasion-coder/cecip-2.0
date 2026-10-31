@@ -21,7 +21,7 @@ export default function BannerBolsaEmpleo({ onSubirCv, empresas }: { onSubirCv: 
             </span>
             <h2 className="font-display mt-4 text-3xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
               ¿Buscás trabajo en Paraná?
-              <span className="bb-brillo mt-1 block bg-gradient-to-r from-[#7dd3fc] via-white to-[#7dd3fc] bg-clip-text text-transparent">Tu CV, en las empresas que contratan.</span>
+              <span className="tema-fijo bb-brillo mt-1 block bg-gradient-to-r from-[#7dd3fc] via-white to-[#7dd3fc] bg-clip-text text-transparent">Tu CV, en las empresas que contratan.</span>
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
               Subí tu currículum gratis. Las más de {Math.floor(empresas / 10) * 10} empresas socias del CeCIP —comercios, industrias y servicios de la ciudad— buscan talento en la Bolsa de Empleo.
@@ -58,7 +58,7 @@ export default function BannerBolsaEmpleo({ onSubirCv, empresas }: { onSubirCv: 
 
 function Perfil({ inicial, nombre, puesto, color }: { inicial: string; nombre: string; puesto: string; color: string }) {
   return (
-    <div className="flex w-56 items-center gap-3 rounded-2xl border border-white/15 bg-white/95 p-3 text-slate-800 shadow-2xl">
+    <div className="tema-fijo flex w-56 items-center gap-3 rounded-2xl border border-white/15 bg-white/95 p-3 text-slate-800 shadow-2xl">
       <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br ${color} font-display text-lg font-bold text-white`}>{inicial}</span>
       <div className="min-w-0">
         <div className="text-sm font-bold text-[#0c2356]">{nombre}</div>

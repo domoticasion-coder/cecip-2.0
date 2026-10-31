@@ -31,6 +31,7 @@ import { CVSubmission, WebNewsItem, ContactMessage } from "./types";
 import ResumePortal from "./components/ResumePortal";
 import BannerBolsaEmpleo from "./components/BannerBolsaEmpleo";
 import BannerPortalSocios from "./components/BannerPortalSocios";
+import BotonTema from "./components/BotonTema";
 import { contenidoWeb, ERP_URL, type EventoErp, type GrupoErp, type NoticiaErp, type NovedadErp } from "./lib/erp";
 import SociosPortal from "./components/SociosPortal";
 import PrivateAdminPortal from "./components/PrivateAdminPortal";
@@ -1004,6 +1005,8 @@ export default function App() {
             >
               <Briefcase size={12} /> Bolsa de Empleo
             </button>
+
+            <BotonTema />
 
             {/* Login de socios: lleva al Portal de Socios del ERP */}
             <a

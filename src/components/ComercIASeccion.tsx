@@ -272,7 +272,7 @@ function Firma({ claro = false }: { claro?: boolean }) {
   return (
     <div className={`flex items-center gap-2 rounded-full py-1 pl-3 pr-1.5 ${claro ? "bg-white shadow-sm" : "border border-white/15 bg-white/[.06] backdrop-blur"}`}>
       <span className={`text-[10px] font-semibold uppercase leading-tight tracking-wider ${claro ? "text-slate-500" : "text-sky-100/70"}`}>Hecho en conjunto<br />por</span>
-      <span className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1">
+      <span className="tema-fijo flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1">
         <img src={`${IMG}/logo-cecip.webp`} alt="CeCIP" className="h-5 w-auto" />
         <span className="text-xs font-bold text-slate-400">×</span>
         <img src={`${IMG}/logo-iec.webp`} alt="Instituto IEC" className="h-6 w-6" />
