@@ -176,6 +176,16 @@ function ComercIAVideo({ onConocer }: { onConocer?: () => void }) {
   const n = CAPITULOS.length;
   const activo = Math.min(n - 1, Math.floor(p * n + 0.0001));
   const oscuro = true;
+  // los capítulos empiezan debajo de la cabecera (logo, firma, cuenta regresiva), que puede ocupar 1 o 2 renglones
+  const cabecera = useRef<HTMLDivElement>(null);
+  const [altoCabecera, setAltoCabecera] = useState(72);
+  useEffect(() => {
+    const el = cabecera.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setAltoCabecera(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const giro = lerp(-10, 10, p); // giro suave en 3D
 
   return (
@@ -188,16 +198,19 @@ function ComercIAVideo({ onConocer }: { onConocer?: () => void }) {
         <div className="relative z-10 mx-auto grid h-full max-w-[1440px] grid-rows-[auto_1fr] items-center gap-2 px-5 pt-20 sm:px-8 lg:grid-cols-12 lg:grid-rows-1 lg:gap-8 lg:px-12 lg:pt-0">
           {/* Textos por capítulo */}
           <div className="relative z-20 min-h-[17.5rem] sm:min-h-[20rem] lg:col-span-5 lg:min-h-[36rem]">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div ref={cabecera} className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <img src={`${IMG}/logo-comercia.webp`} alt="ComercIA Inteligente Paraná" className="cia-logo h-14 w-auto sm:h-20" />
               <Firma />
-              <CuentaRegresiva compacta />
-              {onConocer && (
-                <button type="button" onClick={onConocer}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/40 bg-[#00a3e0]/15 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00a3e0]">
-                  Conocé ComercIA <ArrowRight size={13} />
-                </button>
-              )}
+              {/* cuenta regresiva y acceso a la página de ComercIA, siempre en un mismo renglón */}
+              <div className="flex items-center gap-2">
+                <CuentaRegresiva compacta />
+                {onConocer && (
+                  <button type="button" onClick={onConocer}
+                    className="flex shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border border-[#7dd3fc]/40 bg-[#00a3e0]/15 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#00a3e0]">
+                    Conocé ComercIA <ArrowRight size={12} />
+                  </button>
+                )}
+              </div>
             </div>
             {CAPITULOS.map((c, i) => {
               let d = p * n - i - 0.5; // distancia al centro del capítulo
@@ -205,7 +218,7 @@ function ComercIAVideo({ onConocer }: { onConocer?: () => void }) {
               if (i === n - 1) d = Math.min(0, d); // y el último queda al final
               const visible = clamp(1 - Math.abs(d) * 1.9);
               return (
-                <div key={i} className="absolute inset-x-0 top-[4.5rem] sm:top-24" style={{ opacity: visible, transform: `translateY(${d * -38}px)`, pointerEvents: i === activo ? "auto" : "none" }} aria-hidden={i !== activo}>
+                <div key={i} className="absolute inset-x-0" style={{ top: altoCabecera + 16, opacity: visible, transform: `translateY(${d * -38}px)`, pointerEvents: i === activo ? "auto" : "none" }} aria-hidden={i !== activo}>
                   <div className={`font-display text-sm font-semibold ${oscuro ? "text-sky-300" : "text-[#00a3e0]"}`}>
                     0{i + 1} <span className="mx-1 opacity-50">—</span> {c.eyebrow}
                   </div>

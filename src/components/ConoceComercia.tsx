@@ -64,8 +64,9 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
   const Ejemplo = BUSQUEDAS[b].icono;
 
   return (
-    // "tema-fijo": la página ya es oscura y no la toca el modo oscuro de la web
-    <div className="cc tema-fijo bg-[#050d22] text-white">
+    // la página tiene sus propios colores para el modo claro y el oscuro (ver CSS); "tema-fijo" evita que
+    // los ajustes generales del modo oscuro de la web la toquen
+    <div className="cc cc-raiz tema-fijo">
       <style>{CSS}</style>
 
       {/* ------------------------------------------------ portada */}
@@ -253,6 +254,33 @@ function Telefono({ src, className, desplazar }: { src: string; className: strin
 }
 
 const CSS = `
+/* ---- modo oscuro (por defecto de la página) */
+.cc-raiz { background: #050d22; color: #fff; }
+
+/* ---- modo claro: la misma página con fondo claro (se activa cuando la web no está en oscuro) */
+html:not(.dark) .cc-raiz { background: linear-gradient(180deg, #eef7ff 0%, #f6f9fc 40%, #f3f0ff 100%); color: #0c2356; }
+html:not(.dark) .cc :is(.text-white, .text-white\\/70):not([class^="bg-"]):not([class*=" bg-"]) { color: #0c2356; }
+html:not(.dark) .cc :is([class*="bg-[#00a3e0]"], .bg-violet-500, [class*="from-[#00a3e0]"], .bg-emerald-500) { color: #fff; }
+html:not(.dark) .cc :is(.text-slate-200, .text-slate-300) { color: #475569; }
+html:not(.dark) .cc .text-slate-400 { color: #64748b; }
+html:not(.dark) .cc .text-\\[\\#7dd3fc\\] { color: #0284c7; }
+html:not(.dark) .cc .text-amber-300, html:not(.dark) .cc .text-amber-100 { color: #b45309; }
+html:not(.dark) .cc :is(.bg-white\\/\\[\\.04\\], .bg-white\\/\\[\\.05\\], .bg-white\\/\\[\\.06\\], .bg-white\\/\\[\\.07\\]) { background: #fff; box-shadow: 0 12px 30px -18px rgba(12,35,86,.35); }
+html:not(.dark) .cc .bg-white\\/10 { background: #e2e8f0; }
+html:not(.dark) .cc :is(.border-white\\/10, .border-white\\/15) { border-color: #dbe5f0; }
+html:not(.dark) .cc .border-white\\/25 { border-color: #c7d4e3; }
+html:not(.dark) .cc .hover\\:bg-white\\/10:hover { background: #eef4fa; }
+html:not(.dark) .cc .hover\\:bg-white\\/\\[\\.06\\]:hover { background: #fff; }
+html:not(.dark) .cc .hover\\:text-white:hover:not([class^="bg-"]):not([class*=" bg-"]) { color: #0c2356; }
+html:not(.dark) .cc .bg-\\[\\#0b1d44\\]\\/80 { background: #e8f5fd; }
+html:not(.dark) .cc .border-\\[\\#00a3e0\\]\\/30 { border-color: #bae6fd; }
+html:not(.dark) .cc .from-\\[\\#0b1d44\\] { background-image: linear-gradient(135deg, #e6f4fd, #f1ecff); border-color: #dbe5f0; }
+html:not(.dark) .cc .cc-urgencia { background-image: linear-gradient(90deg, #fff4dc, #ffffff 55%, #f1ecff); border-color: #fcd34d; }
+html:not(.dark) .cc .cc-grilla { background-image: linear-gradient(rgba(12,35,86,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(12,35,86,.06) 1px, transparent 1px); }
+html:not(.dark) .cc .cc-degradado { background-image: linear-gradient(90deg, #0284c7, #00a3e0 40%, #7c3aed 80%, #0284c7); }
+/* el logo de ComercIA tiene letras blancas: en claro va sobre una placa oscura */
+html:not(.dark) .cc .cc-logo { background: #0c2356; padding: .55rem .9rem; border-radius: 1.2rem; box-shadow: 0 14px 30px -14px rgba(12,35,86,.6); }
+
 .cc-grilla { background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
   background-size: 52px 52px; mask-image: radial-gradient(circle at 60% 40%, #000, transparent 70%); }
 .cc-logo { filter: drop-shadow(0 8px 30px rgba(0,163,224,.5)); animation: cc-entra .8s cubic-bezier(.2,.9,.3,1) both; }

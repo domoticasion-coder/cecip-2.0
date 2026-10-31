@@ -27,8 +27,8 @@ export function CuentaRegresiva({ compacta = false }: { compacta?: boolean }) {
 
   if (compacta) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-100 tabular-nums">
-        <Rocket size={13} className="text-amber-300" /> Lanzamiento 1/12 · faltan {r.dias}d {String(r.horas).padStart(2, "0")}h {String(r.min).padStart(2, "0")}m
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[11px] font-bold text-amber-100 tabular-nums">
+        <Rocket size={12} className="shrink-0 text-amber-300" /> Lanza el 1/12 · {r.dias}d {String(r.horas).padStart(2, "0")}h {String(r.min).padStart(2, "0")}m
       </span>
     );
   }
