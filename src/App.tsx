@@ -1936,10 +1936,11 @@ export default function App() {
           {/* firma de quienes desarrollaron la web */}
           <div className="tema-fijo flex items-center gap-2.5 text-slate-400">
             <span>Sitio desarrollado por</span>
-            <span className="flex items-center gap-2 rounded-full bg-white/[.06] py-1 pl-1 pr-3 ring-1 ring-white/10">
+            <a href="https://www.iec-ia.com.ar" target="_blank" rel="noopener noreferrer" title="Sitio del Instituto IEC"
+              className="flex items-center gap-2 rounded-full bg-white/[.06] py-1 pl-1 pr-3 ring-1 ring-white/10 transition hover:bg-white/[.12]">
               <img src="/images/comercia/logo-iec.webp" alt="Instituto IEC" className="h-7 w-7 rounded-full bg-white object-contain p-0.5" />
               <span className="font-semibold text-white">Instituto IEC</span>
-            </span>
+            </a>
           </div>
         </div>
 

@@ -296,7 +296,7 @@ function Firma({ claro = false }: { claro?: boolean }) {
       <span className="tema-fijo flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1">
         <img src={`${IMG}/logo-cecip.webp`} alt="CeCIP" className="h-5 w-auto" />
         <span className="text-xs font-bold text-slate-400">×</span>
-        <img src={`${IMG}/logo-iec.webp`} alt="Instituto IEC" className="h-6 w-6" />
+        <a href="https://www.iec-ia.com.ar" target="_blank" rel="noopener noreferrer" title="Sitio del Instituto IEC"><img src={`${IMG}/logo-iec.webp`} alt="Instituto IEC" className="h-6 w-6" /></a>
       </span>
     </div>
   );

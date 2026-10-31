@@ -15,6 +15,7 @@ import { CuentaRegresiva } from "./CuentaRegresiva";
 
 const IMG = "/images/comercia";
 const URL_ADHESION = "https://iec-ia.com.ar/formulariofactoria.html";
+const URL_IEC = "https://www.iec-ia.com.ar";
 const APP_URL: string = ((import.meta as any).env?.VITE_COMERCIA_APP_URL || "").trim();
 
 // Ejemplos de búsqueda con IA (como responde la app)
@@ -134,12 +135,17 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
             {[
               { icono: Zap, t: "¿Qué es?", d: "Una web app con todos los comercios, profesionales, promos y eventos de Paraná, y un asistente con IA que te ayuda a encontrar lo que buscás." },
               { icono: TrendingUp, t: "¿Por qué?", d: "Hoy todos buscan primero en el celular. ComercIA hace que esa búsqueda termine en un comercio de Paraná, y no en una plataforma de afuera." },
-              { icono: Users, t: "¿Quién la hace?", d: "Es un convenio entre el CeCIP, el Instituto IEC y La FactorIA para que el comercio local dé el salto a la tecnología y la IA." },
-            ].map(({ icono: Icono, t, d }) => (
+              { icono: Users, t: "¿Quién la hace?", d: "Es un convenio entre el CeCIP, el Instituto IEC y La FactorIA para que el comercio local dé el salto a la tecnología y la IA.", link: true },
+            ].map(({ icono: Icono, t, d, link }) => (
               <div key={t} className="rounded-3xl border border-white/10 bg-white/[.04] p-6 transition hover:border-[#00a3e0]/40 hover:bg-white/[.06]">
                 <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#00a3e0] to-violet-500"><Icono size={20} /></span>
                 <h2 className="font-display mt-4 text-xl font-bold">{t}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">{d}</p>
+                {link && (
+                  <a href={URL_IEC} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#7dd3fc] hover:underline">
+                    Conocé el Instituto IEC <ArrowRight size={14} />
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -232,10 +238,13 @@ export default function ConoceComercia({ onBuscarComercios }: { onBuscarComercio
             <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1">
               <img src={`${IMG}/logo-cecip.webp`} alt="CeCIP" className="h-5 w-auto" />
               <span className="font-bold text-slate-400">×</span>
-              <img src={`${IMG}/logo-iec.webp`} alt="Instituto IEC" className="h-6 w-6" />
+              <a href={URL_IEC} target="_blank" rel="noopener noreferrer" title="Sitio del Instituto IEC"><img src={`${IMG}/logo-iec.webp`} alt="Instituto IEC" className="h-6 w-6" /></a>
             </span>
             y La FactorIA
           </div>
+          <a href={URL_IEC} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#7dd3fc] hover:underline">
+            Visitá el sitio del Instituto IEC <ArrowRight size={14} />
+          </a>
         </div>
       </section>
     </div>
