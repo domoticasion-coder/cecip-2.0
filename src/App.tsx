@@ -16,7 +16,6 @@ import {
   MapPin, 
   CheckCircle, 
   X,
-  Globe,
   Briefcase,
   Lock,
   Calendar,
@@ -1913,11 +1912,15 @@ export default function App() {
 
         {/* Footer Bottom Bar */}
         <div className="max-w-[1440px] w-full mx-auto pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 relative z-10 text-[11px] font-normal text-slate-400">
-          <span>© 2025 CeCIP</span>
-          
-          <div className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
-            <Globe size={13} className="text-[#00a3e0]" />
-            <span>Hemisferio</span>
+          <span>© {new Date().getFullYear()} Centro Comercial e Industrial de Paraná. Todos los derechos reservados.</span>
+
+          {/* firma de quienes desarrollaron la web */}
+          <div className="tema-fijo flex items-center gap-2.5 text-slate-400">
+            <span>Sitio desarrollado por</span>
+            <span className="flex items-center gap-2 rounded-full bg-white/[.06] py-1 pl-1 pr-3 ring-1 ring-white/10">
+              <img src="/images/comercia/logo-iec.webp" alt="Instituto IEC" className="h-7 w-7 rounded-full bg-white object-contain p-0.5" />
+              <span className="font-semibold text-white">Instituto IEC</span>
+            </span>
           </div>
         </div>
 
