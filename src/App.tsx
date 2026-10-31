@@ -30,6 +30,7 @@ import {
 import { CVSubmission, WebNewsItem, ContactMessage } from "./types";
 import ResumePortal from "./components/ResumePortal";
 import BannerBolsaEmpleo from "./components/BannerBolsaEmpleo";
+import BannerPortalSocios from "./components/BannerPortalSocios";
 import { contenidoWeb, ERP_URL, type EventoErp, type GrupoErp, type NoticiaErp, type NovedadErp } from "./lib/erp";
 import SociosPortal from "./components/SociosPortal";
 import PrivateAdminPortal from "./components/PrivateAdminPortal";
@@ -1272,6 +1273,9 @@ export default function App() {
             onObjetivos={() => openContentModal("nuestros objetivos")}
             onBeneficios={() => scrollToSection("beneficios-section")}
           />
+
+      {/* Publicidad del nuevo Portal de Socios (arriba de la Agenda) */}
+      <BannerPortalSocios />
 
       {/* 3.5 PUBLIC CALENDAR SECTION */}
       <section 
