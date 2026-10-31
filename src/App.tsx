@@ -12,7 +12,6 @@ import {
   Building, 
   Building2,
   Home,
-  Facebook, 
   Instagram, 
   MapPin, 
   CheckCircle, 
@@ -1787,10 +1786,7 @@ export default function App() {
               Como institución entendemos que, para mejorar la calidad del comercio, la industria y los servicios, debemos trabajar de manera conjunta con todos los protagonistas del sector.
             </p>
             <div className="flex items-center gap-3">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-[#00a3e0] hover:bg-white hover:text-[#0c2356] text-white flex items-center justify-center transition-colors shadow-sm">
-                <Facebook size={18} />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-[#00a3e0] hover:bg-white hover:text-[#0c2356] text-white flex items-center justify-center transition-colors shadow-sm">
+              <a href="https://www.instagram.com/centrocomercialparana/" target="_blank" rel="noopener noreferrer" aria-label="Instagram del CeCIP" className="w-10 h-10 rounded-full bg-[#00a3e0] hover:bg-white hover:text-[#0c2356] text-white flex items-center justify-center transition-colors shadow-sm">
                 <Instagram size={18} />
               </a>
             </div>
