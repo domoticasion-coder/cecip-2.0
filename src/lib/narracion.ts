@@ -20,6 +20,8 @@ function alPrimerGesto(fn: () => void) {
   if (escuchando) return;
   escuchando = true;
   const disparar = (e: Event) => {
+    // los botones de sonido de los videos se manejan solos (si no, el mismo clic activaría y apagaría el sonido)
+    if ((e.target as Element | null)?.closest?.("[data-sonido]")) return;
     // los eventos que se repiten mucho (scroll, mouse) reintentan como máximo cada 0,8 s
     const continuo = e.type === "scroll" || e.type === "mousemove" || e.type === "wheel";
     if (continuo && performance.now() - ultimoIntento < 800) return;
@@ -40,7 +42,9 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }
 }) {
   const [voz, setVoz] = useState(true);
   const vozRef = useRef(true);
-  const [bloqueado, setBloqueado] = useState(false);
+  const [bloqueado, setBloqueadoEstado] = useState(false);
+  const bloqueadoRef = useRef(false);
+  const setBloqueado = (v: boolean) => { bloqueadoRef.current = v; setBloqueadoEstado(v); };
   const audios = useRef<HTMLAudioElement[]>([]);
   const sonando = useRef<boolean[]>([]);
   const fondo = useRef<HTMLAudioElement | null>(null);
@@ -108,6 +112,13 @@ export function useNarracion({ clip, musica, alta = 0.3, baja = 0.09, posicion }
   const setActivo = (v: boolean) => { activo.current = v; if (v) sonarMusica(); else apagar(); };
 
   const alternar = (k: number, desde = 0) => {
+    // si el navegador había bloqueado el sonido, el botón lo activa (no lo apaga)
+    if (vozRef.current && bloqueadoRef.current) {
+      setBloqueado(false);
+      sonarMusica();
+      hablar(k, desde);
+      return;
+    }
     const nueva = !vozRef.current;
     vozRef.current = nueva;
     setVoz(nueva);

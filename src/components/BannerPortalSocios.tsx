@@ -162,7 +162,7 @@ export default function BannerPortalSocios() {
               className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-white/25 text-white hover:bg-white/10">
               {pausa ? <Play size={13} /> : <Pause size={13} />}
             </button>
-            <button type="button" onClick={() => sonido.alternar(k)} aria-pressed={sonido.voz}
+            <button type="button" data-sonido onClick={() => sonido.alternar(k, tRef.current / 1000)} aria-pressed={sonido.voz}
               className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition ${sonido.voz && sonido.bloqueado ? "ps-escuchar bg-white text-[#0c2356]" : sonido.voz ? "bg-white/15 text-white" : "border border-white/25 text-white hover:bg-white/10"}`}>
               {sonido.voz && !sonido.bloqueado ? <Volume2 size={13} /> : <VolumeX size={13} />}
               <span className="hidden sm:inline">{!sonido.voz ? "Activar sonido" : sonido.bloqueado ? "Activar sonido" : "Sonido"}</span>
