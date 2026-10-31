@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, Bot, Cctv, Flame, Hammer, MapPin, Megaphone, MessageCircle, Pause, Play, Search, Smartphone, Volume2, VolumeX, Wrench, Zap } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
 import { clamp, lerp, movimientoReducido, suave, tramo } from "../lib/animacion";
+import { useNarracion } from "../lib/narracion";
 
 /**
  * ComercIA Inteligente: una animación tipo video (4 capítulos) que se reproduce sola al verla.
@@ -118,51 +119,9 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
   const tRef = useRef(0);
   const [pausa, setPausa] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [voz, setVoz] = useState(false);
-  const vozRef = useRef(false);
-  const audios = useRef<HTMLAudioElement[]>([]);
-  const sonando = useRef<boolean[]>([]);
-  const musica = useRef<HTMLAudioElement | null>(null);
-  const fundido = useRef(0);
-
-  // la música sube y baja de a poco (más baja mientras habla la voz)
-  const volumenMusica = (destino: number) => {
-    const m = musica.current;
-    if (!m) return;
-    clearInterval(fundido.current);
-    fundido.current = window.setInterval(() => {
-      const d = destino - m.volume;
-      if (Math.abs(d) < 0.02) { m.volume = destino; clearInterval(fundido.current); }
-      else m.volume = clamp(m.volume + Math.sign(d) * 0.02);
-    }, 40);
-  };
-  const sonarMusica = () => {
-    if (!musica.current) {
-      musica.current = new Audio("/audio/comercia-musica.mp3");
-      musica.current.loop = true;
-      musica.current.volume = 0;
-    }
-    musica.current.play().catch(() => {});
-    volumenMusica(sonando.current.some(Boolean) ? MUSICA_BAJA : MUSICA_ALTA);
-  };
-  const callar = () => audios.current.forEach((a, k) => { a.pause(); sonando.current[k] = false; });
-  const apagar = () => { callar(); clearInterval(fundido.current); musica.current?.pause(); };
-  const hablar = (k: number) => {
-    if (!vozRef.current) return;
-    callar();
-    volumenMusica(MUSICA_BAJA);
-    if (!audios.current[k]) {
-      const a = new Audio(`/audio/comercia-${k + 1}.mp3`);
-      const fin = () => { sonando.current[k] = false; volumenMusica(MUSICA_ALTA); };
-      a.addEventListener("ended", fin);
-      a.addEventListener("error", fin);
-      audios.current[k] = a;
-    }
-    const a = audios.current[k];
-    a.currentTime = 0;
-    sonando.current[k] = true;
-    a.play().catch(() => { sonando.current[k] = false; });
-  };
+  // voz y música: arrancan solas al ver la sección (ver lib/narracion)
+  const sonido = useNarracion({ clip: (k) => `/audio/comercia-${k + 1}.mp3`, musica: "/audio/comercia-musica.mp3", alta: MUSICA_ALTA, baja: MUSICA_BAJA });
+  const { vozRef, sonando, hablar } = sonido;
   const mover = (nuevo: number) => { tRef.current = nuevo; setT(nuevo); };
 
   useEffect(() => {
@@ -174,8 +133,9 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 
   useEffect(() => {
-    if (!visible || pausa) { apagar(); return; }
-    if (vozRef.current) sonarMusica();
+    sonido.setActivo(visible && !pausa);
+    if (!visible || pausa) return;
+    hablar(tramoDe(tRef.current));
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
       const v = tRef.current;
@@ -191,24 +151,15 @@ function useVideo(ref: React.RefObject<HTMLElement | null>) {
     };
     raf = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(raf);
-  }, [visible, pausa]);
-
-  useEffect(() => () => apagar(), []);
+  }, [visible, pausa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, voz,
+    p: avanceEn(t), tiempo: t / TOTAL, pausa, setPausa, voz: sonido.voz, bloqueado: sonido.bloqueado,
     irA: (k: number) => { mover(INICIOS[k]); setPausa(false); hablar(k); },
     alternarVoz: () => {
-      const nueva = !vozRef.current;
-      vozRef.current = nueva;
-      setVoz(nueva);
-      if (!nueva) return apagar();
-      sonarMusica();
-      // al activarla, el capítulo actual arranca de nuevo con su frase
       const k = tramoDe(tRef.current);
-      mover(INICIOS[k]);
-      setPausa(false);
-      hablar(k);
+      if (!vozRef.current) { mover(INICIOS[k]); setPausa(false); }
+      sonido.alternar(k);
     },
   };
 }
@@ -220,7 +171,7 @@ export default function ComercIASeccion() {
 
 function ComercIAVideo() {
   const ref = useRef<HTMLElement>(null);
-  const { p, tiempo, pausa, setPausa, irA, voz, alternarVoz } = useVideo(ref);
+  const { p, tiempo, pausa, setPausa, irA, voz, bloqueado, alternarVoz } = useVideo(ref);
   const n = CAPITULOS.length;
   const activo = Math.min(n - 1, Math.floor(p * n + 0.0001));
   const oscuro = true;
@@ -298,9 +249,9 @@ function ComercIAVideo() {
             {pausa ? <Play size={15} /> : <Pause size={15} />}
           </button>
           <button type="button" onClick={alternarVoz} aria-pressed={voz}
-            className={`flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-xs font-bold transition-colors ${voz ? "bg-[#00a3e0] text-white" : oscuro ? "border border-white/25 text-white hover:bg-white/10" : "cia-escuchar border border-[#00a3e0] bg-white text-[#0c2356]"}`}>
-            {voz ? <Volume2 size={15} /> : <VolumeX size={15} />}
-            {voz ? "Sonido activado" : "Activar sonido"}
+            className={`flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-xs font-bold transition-colors ${voz && bloqueado ? "cia-escuchar bg-[#00a3e0] text-white" : voz ? "bg-[#00a3e0] text-white" : oscuro ? "border border-white/25 text-white hover:bg-white/10" : "cia-escuchar border border-[#00a3e0] bg-white text-[#0c2356]"}`}>
+            {voz && !bloqueado ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            {!voz ? "Activar sonido" : bloqueado ? "Tocá para escuchar" : "Sonido activado"}
           </button>
           <div className="flex gap-1.5 sm:hidden">
             {CAPITULOS.map((_, i) => (

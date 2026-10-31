@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, BadgePercent, Bell, Bot, Briefcase, CalendarCheck, CheckCircle2, CreditCard, FileText, Globe, Lightbulb, Lock,
-  Megaphone, Pause, Phone, Play, Radio, Sparkles,
+  Megaphone, Pause, Phone, Play, Radio, Sparkles, Volume2, VolumeX,
 } from "lucide-react";
 import { ERP_URL } from "../lib/erp";
+import { useNarracion } from "../lib/narracion";
 
 /**
  * Publicidad animada del nuevo Portal de Socios (va arriba de la Agenda de Actividades).
  * Un "video" que viaja de 1898 a hoy: cada época tiene su escena (tren y teléfono, radio y la sede de
  * 1930, televisión y la fusión de 1952, internet, e IA) y termina en un celular con el Portal funcionando.
  * Las épocas duran cada vez menos: la tecnología se acelera. Se pausa fuera de pantalla.
- * Hitos del CeCIP: Municipalidad de Paraná (Ciudad y Memoria) y El Diario de Paraná.
+ * Tiene voz y música (ElevenLabs, en /public/audio/portal-*.mp3): cada época espera a que termine su frase.
+ * Fuentes de los hitos del CeCIP: Municipalidad de Paraná (Ciudad y Memoria) y El Diario de Paraná (14/04/2024).
  */
 
 const FUNDACION = 1898;
@@ -19,10 +21,10 @@ const ANIOS = HOY - FUNDACION;
 const PORTAL = `${ERP_URL}/portal`;
 
 const ERAS = [
-  { anio: FUNDACION, ritmo: "Cambios cada 100 años", tec: "Ferrocarril, telégrafo y teléfono", cecip: "Nace el Centro Comercial de Paraná", dur: 4200, fondo: ["#3a2614", "#140c06"], acento: "#f59e0b" },
-  { anio: 1930, ritmo: "Cambios cada década", tec: "La radio llega a los hogares", cecip: "Inaugura su sede propia frente a la plaza", dur: 3600, fondo: ["#3b2f12", "#121008"], acento: "#fbbf24" },
-  { anio: 1952, ritmo: "Cambios cada año", tec: "Llega la televisión", cecip: "Se fusiona con la Asociación Industrial: nace el CeCIP", dur: 3200, fondo: ["#0f3b3a", "#06141a"], acento: "#2dd4bf" },
-  { anio: 2000, ritmo: "Cambios cada mes", tec: "Internet, celulares y redes", cecip: "El comercio de Paraná se conecta", dur: 2700, fondo: ["#0b2d63", "#050f26"], acento: "#38bdf8" },
+  { anio: FUNDACION, ritmo: "Cambios cada 100 años", tec: "Ferrocarril, telégrafo y teléfono", cecip: "26 de agosto: un centenar de comerciantes funda el Centro Comercial de Paraná", dur: 4200, fondo: ["#3a2614", "#140c06"], acento: "#f59e0b" },
+  { anio: 1930, ritmo: "Cambios cada década", tec: "La radio llega a los hogares (primera transmisión en el país: 1920)", cecip: "15 de septiembre: inaugura su sede propia frente a la plaza 1° de Mayo", dur: 3600, fondo: ["#3b2f12", "#121008"], acento: "#fbbf24" },
+  { anio: 1952, ritmo: "Cambios cada año", tec: "La televisión: Canal 7 sale al aire en 1951", cecip: "Se fusiona con la Asociación Industrial de Paraná: nace el CeCIP", dur: 3200, fondo: ["#0f3b3a", "#06141a"], acento: "#2dd4bf" },
+  { anio: 2000, ritmo: "Cambios cada mes", tec: "Internet, celulares y redes", cecip: "El comercio de Paraná entra en la era digital", dur: 2700, fondo: ["#0b2d63", "#050f26"], acento: "#38bdf8" },
   { anio: HOY, ritmo: "Cambios en tiempo real", tec: "Inteligencia artificial", cecip: "Lanza el Portal de Socios y ComercIA con IA", dur: 9000, fondo: ["#2a0f5e", "#0a0626"], acento: "#a78bfa" },
 ];
 const INICIOS = ERAS.reduce<number[]>((a, e, i) => [...a, i ? a[i - 1] + ERAS[i - 1].dur : 0], []);
@@ -57,21 +59,34 @@ export default function BannerPortalSocios() {
     return () => io.disconnect();
   }, []);
 
+  // voz y música: arrancan solas al ver la sección (ver lib/narracion)
+  const sonido = useNarracion({ clip: (i) => `/audio/portal-${i + 1}.mp3`, musica: "/audio/portal-musica.mp3", alta: 0.28, baja: 0.08 });
+
   useEffect(() => {
+    sonido.setActivo(visible && !pausa);
     if (!visible || pausa) return;
+    sonido.hablar(eraDe(tRef.current));
     let raf = 0, antes = performance.now();
     const paso = (ahora: number) => {
-      tRef.current = (tRef.current + Math.min(ahora - antes, 1000)) % TOTAL;
+      const v = tRef.current;
+      let nv = (v + Math.min(ahora - antes, 1000)) % TOTAL;
       antes = ahora;
-      setT(tRef.current);
+      const i = eraDe(v);
+      const fin = INICIOS[i] + ERAS[i].dur - 1;
+      // cada época espera a que termine su frase
+      if (sonido.vozRef.current && sonido.sonando.current[i] && v <= fin && (nv > fin || nv < v)) nv = fin;
+      const i2 = eraDe(nv);
+      if (i2 !== i || nv < v) sonido.hablar(i2);
+      tRef.current = nv;
+      setT(nv);
       raf = requestAnimationFrame(paso);
     };
     raf = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(raf);
-  }, [visible, pausa]);
+  }, [visible, pausa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // al saltar con los puntos el año ya aparece completo (sin la cuenta)
-  const irA = (k: number) => { tRef.current = INICIOS[k] + 900; setT(INICIOS[k] + 900); setPausa(false); };
+  const irA = (k: number) => { tRef.current = INICIOS[k] + 900; setT(INICIOS[k] + 900); setPausa(false); sonido.hablar(k); };
   const k = eraDe(t);
   const era = ERAS[k];
   const local = t - INICIOS[k];
@@ -137,6 +152,11 @@ export default function BannerPortalSocios() {
               className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-white/25 text-white hover:bg-white/10">
               {pausa ? <Play size={13} /> : <Pause size={13} />}
             </button>
+            <button type="button" onClick={() => sonido.alternar(k)} aria-pressed={sonido.voz}
+              className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition ${sonido.voz && sonido.bloqueado ? "ps-escuchar bg-white text-[#0c2356]" : sonido.voz ? "bg-white/15 text-white" : "border border-white/25 text-white hover:bg-white/10"}`}>
+              {sonido.voz && !sonido.bloqueado ? <Volume2 size={13} /> : <VolumeX size={13} />}
+              <span className="hidden sm:inline">{!sonido.voz ? "Activar sonido" : sonido.bloqueado ? "Tocá para escuchar" : "Sonido"}</span>
+            </button>
             <div className="relative h-8 flex-1">
               <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/15" />
               <div className="ps-progreso absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full" style={{ width: `${avance * 100}%`, background: `linear-gradient(90deg, #f59e0b, #2dd4bf, #38bdf8, ${era.acento})` }} />
@@ -197,7 +217,7 @@ function Escena1898() {
         <Phone size={30} />
         <span className="ps-ring" /><span className="ps-ring" style={{ animationDelay: ".6s" }} />
       </div>
-      <Etiqueta>1898 · un centenar de comerciantes fundan el Centro Comercial</Etiqueta>
+      <Etiqueta>Primeras gestiones: Cámara Arbitral de Cereales, dragado del puerto y nuevos ramales ferroviarios</Etiqueta>
     </Marco>
   );
 }
@@ -220,7 +240,7 @@ function Escena1930() {
           <div className="absolute bottom-2 flex gap-1">{[0, 1, 2, 3, 4].map((i) => <span key={i} className="ps-ecualizador" style={{ animationDelay: `${i * 0.12}s` }} />)}</div>
         </div>
       </div>
-      <Etiqueta>1930 · inaugura su edificio frente a la plaza 1° de Mayo</Etiqueta>
+      <Etiqueta>15/9/1930 · proyecto del ingeniero Juan F. Cavallo, construido por Lochner</Etiqueta>
     </Marco>
   );
 }
@@ -246,7 +266,7 @@ function Escena1952() {
         <span className="ps-fusion-mas mx-2 text-xl font-bold text-teal-300">+</span>
         <span className="ps-fusion-b rounded-full border border-teal-300/50 bg-teal-950/80 px-3 py-1.5 text-xs font-bold">Asociación Industrial</span>
       </div>
-      <Etiqueta>1952 · nace el Centro Comercial e Industrial de Paraná</Etiqueta>
+      <Etiqueta>14/10/1952 · primera comisión del CeCIP, presidida por Alfredo J. Nux</Etiqueta>
     </Marco>
   );
 }
@@ -275,7 +295,7 @@ function Escena2000() {
       {["@", "www", "❤", "✉"].map((s, i) => (
         <span key={s} className="ps-burbuja absolute rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-blue-900" style={{ left: `${48 + (i % 2) * 14}%`, top: `${10 + i * 14}%`, animationDelay: `${i * 0.35}s` }}>{s}</span>
       ))}
-      <Etiqueta>2000 · el comercio de Paraná se conecta</Etiqueta>
+      <Etiqueta>Internet comercial en la Argentina desde 1995</Etiqueta>
     </Marco>
   );
 }
@@ -338,6 +358,8 @@ const CSS = `
 @keyframes ps-sube { from { opacity: 0; transform: translateY(16px); filter: blur(4px); } }
 .ps-velocidad { width: 8px; height: 8px; border-radius: 999px; background: currentColor; animation: ps-titila infinite ease-in-out; }
 @keyframes ps-titila { 50% { opacity: .2; transform: scale(.6); } }
+.ps-escuchar { animation: ps-pulso-b 1.6s ease-out infinite; }
+@keyframes ps-pulso-b { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 100% { box-shadow: 0 0 0 12px rgba(255,255,255,0); } }
 .ps-cta { box-shadow: 0 14px 34px -12px rgba(0,0,0,.6); animation: ps-pulso 2.4s ease-out infinite; }
 @keyframes ps-pulso { 0% { box-shadow: 0 0 0 0 var(--acento); } 100% { box-shadow: 0 0 0 16px transparent; } }
 .ps-progreso { box-shadow: 0 0 12px var(--acento); }
@@ -345,7 +367,7 @@ const CSS = `
 @keyframes ps-escena { from { opacity: 0; transform: scale(.94) translateY(10px); filter: blur(6px); } }
 .ps-etiqueta { animation: ps-sube .6s .5s both; }
 .ps-sepia { background: radial-gradient(circle at 70% 20%, rgba(251,191,36,.18), transparent 60%); }
-.ps-tren { animation: ps-tren 4.2s linear both; }
+.ps-tren { animation: ps-tren 5s linear infinite; }
 @keyframes ps-tren { from { left: -50%; } to { left: 105%; } }
 .ps-rueda { animation: ps-girar .6s linear infinite; }
 @keyframes ps-girar { to { transform: rotate(360deg); } }
